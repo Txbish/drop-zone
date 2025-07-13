@@ -1,12 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
-    <link rel="stylesheet" href="/css/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
-    <div class="container">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DropZone - <%= title %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header class="main-header">
+      <nav class="main-nav">
+        <a href="/" class="logo"> <i class="fas fa-cubes"></i> DropZone </a>
+        <ul class="nav-links">
+          <% if (currentUser) { %>
+          <li><a href="/dashboard">Dashboard</a></li>
+          <li><a href="/logout">Logout</a></li>
+          <% } else { %>
+          <li><a href="/login">Login</a></li>
+          <li><a href="/signup">Sign Up</a></li>
+          <% } %>
+        </ul>
+      </nav>
+    </header>
+
+    <% const flashMessages = messages || {}; const messageKeys =
+    Object.keys(flashMessages); const hasMessages = messageKeys.length > 0; %>
+    <% if (hasMessages) { %>
+    <div class="container messages-container">
+      <% messageKeys.forEach(key => { %> <% flashMessages[key].forEach(message
+      => { %>
+      <div class="message message-<%= key %>">
+        <% if (key === 'success') { %><i class="fas fa-check-circle"></i><% } %>
+        <% if (key === 'error') { %><i class="fas fa-exclamation-circle"></i><%
+        } %> <% if (key === 'warning') { %><i
+          class="fas fa-exclamation-triangle"
+        ></i
+        ><% } %> <% if (key === 'info') { %><i class="fas fa-info-circle"></i><%
+        } %> <%= message %>
+      </div>
+      <% }) %> <% }) %>
+    </div>
+    <% } %>
+
+    <main class="container">
+      <!-- Content goes here -->
+    </main>
+  </body>
+</html>

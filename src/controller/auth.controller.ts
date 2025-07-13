@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import passport from 'passport';
 import prisma from '../database/prismaClient';
@@ -10,7 +10,7 @@ const handleLogin = passport.authenticate('local', {
 });
 
 const renderLogin = (req: Request, res: Response) => {
-    res.render('login', { messages: req.flash() });
+    res.render('login', { messages: req.flash(), title: 'Login' });
 };
 
 const handleSignup = async (req: Request, res: Response) => {
@@ -30,7 +30,16 @@ const handleSignup = async (req: Request, res: Response) => {
 };
 
 const renderSignup = (req: Request, res: Response) => {
-    res.render('signup');
+    res.render('signup', { title: 'Sign Up' });
 };
 
-export { handleLogin, renderLogin, handleSignup, renderSignup };
+const handleLogout = (req: Request, res: Response, next: NextFunction) => {
+    req.logout((err) => {
+        if (err) {
+            return next(err);
+        }
+        res.redirect('/');
+    });
+};
+
+export { handleLogin, renderLogin, handleSignup, renderSignup, handleLogout };
