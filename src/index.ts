@@ -1,30 +1,32 @@
-import express from "express"
-import dotenv from "dotenv"
+import express, { Express, Request, Response, NextFunction, RequestHandler } from "express";
+import dotenv from "dotenv";
 import sessionConfig from "./config/sessionConfig";
-import passport from "passport"
-import createError from 'http-errors'
-import errorHandler from './middleware/errorHandler'
+import passport from "passport";
+import createError from 'http-errors';
+import errorHandler from './middleware/errorHandler';
 
 dotenv.config();
-const app = express();
+
+const PORT: string | number = process.env.PORT || 3000;
+const app: Express = express();
 
 app.use(sessionConfig);
 app.use(express.json());
 
 app.use(passport.initialize())
 app.use(passport.session())
+const injectUser: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
+  res.locals.currentUser = req.user;
+  next();
+};
+app.use(injectUser);
 
-app.use((req, res, next) => {
-  res.locals.currentUser = req.user
-  next()
-})
+app.use((req: Request, res: Response, next: NextFunction): void => {
+  next(createError(404));
+});
 
-// 404 handler - should come before error handler
-app.use((req, res, next) => next(createError(404)))
+app.use(errorHandler);
 
-// Error handler - should be last
-app.use(errorHandler)
-
-app.listen(process.env.PORT, () => {
-  console.log(`Server started on ${process.env.PORT}.`);
+app.listen(PORT, (): void => {
+  console.log(`Server started on ${PORT}.`);
 });

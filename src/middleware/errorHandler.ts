@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request,RequestHandler, Response, NextFunction } from 'express';
 import { HttpError } from 'http-errors';
 
 interface ErrorWithStatus extends Error {
@@ -6,22 +6,19 @@ interface ErrorWithStatus extends Error {
   statusCode?: number;
 }
 
-const errorHandler = (
+const errorHandler:RequestHandler = (
   err: ErrorWithStatus | HttpError,
   req: Request,
   res: Response,
   next: NextFunction
 ): void => {
-  // If response was already sent, delegate to default Express error handler
   if (res.headersSent) {
     return next(err);
   }
 
-  // Set default error status and message
   let status = 500;
   let message = 'Internal Server Error';
 
-  // Handle different types of errors
   if (err.status) {
     status = err.status;
     message = err.message;
@@ -53,7 +50,6 @@ const errorHandler = (
     });
   }
 
-  // Send error response
   res.status(status).json({
     error: {
       message,
