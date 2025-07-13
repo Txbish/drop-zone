@@ -1,19 +1,36 @@
+import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
+import passport from 'passport';
+import prisma from '../database/prismaClient';
 
+const handleLogin = passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true,
+});
 
+const renderLogin = (req: Request, res: Response) => {
+    res.render('login', { messages: req.flash() });
+};
 
-const handleLogin= async (req,res)=>{
+const handleSignup = async (req: Request, res: Response) => {
+    try {
+        const { username, password } = req.body;
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await prisma.user.create({
+            data: {
+                username,
+                password: hashedPassword,
+            },
+        });
+        res.redirect('/login');
+    } catch (error) {
+        res.redirect('/signup');
+    }
+};
 
-}
+const renderSignup = (req: Request, res: Response) => {
+    res.render('signup');
+};
 
-const renderLogin=(req,res)=>{}
-
-
-
-
-const handleSignup= async (req,res)=>{
-
-}
-
-const renderSignup=(req,res)=>{}
-
-export {handleLogin,renderLogin,handleSignup,renderSignup};
+export { handleLogin, renderLogin, handleSignup, renderSignup };

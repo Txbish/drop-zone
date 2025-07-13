@@ -1,4 +1,4 @@
-import { Request,RequestHandler, Response, NextFunction } from 'express';
+import { Request, ErrorRequestHandler, Response, NextFunction } from 'express';
 import { HttpError } from 'http-errors';
 
 interface ErrorWithStatus extends Error {
@@ -6,7 +6,7 @@ interface ErrorWithStatus extends Error {
   statusCode?: number;
 }
 
-const errorHandler:RequestHandler = (
+const errorHandler: ErrorRequestHandler = (
   err: ErrorWithStatus | HttpError,
   req: Request,
   res: Response,

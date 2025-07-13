@@ -1,19 +1,23 @@
-import { PrismaSessionStore } from '@quixo3/prisma-session-store'
-import session from 'express-session'
-import prisma from '../database/prismaClient'
+import { PrismaSessionStore } from '@quixo3/prisma-session-store';
+import session, { SessionOptions } from 'express-session';
+import prisma from '../database/prismaClient';
 
-const sessionConfig = session({
+const SESSION_SECRET: string = process.env.SESSION_SECRET || 'pickle rick';
+const MAX_AGE: number = 7 * 24 * 60 * 60 * 1000; 
+const CHECK_PERIOD: number = 2 * 60 * 1000; 
+
+const sessionConfig: SessionOptions = {
   cookie: {
-    maxAge: 7 * 24 * 60 * 60 * 1000, 
+    maxAge: MAX_AGE,
   },
-  secret: process.env.SESSION_SECRET || 'pickle rick',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   store: new PrismaSessionStore(prisma, {
-    checkPeriod: 2 * 60 * 1000, 
+    checkPeriod: CHECK_PERIOD,
     dbRecordIdIsSessionId: true,
     dbRecordIdFunction: undefined,
   }),
-})
+};
 
-export default sessionConfig
+export default session(sessionConfig);
