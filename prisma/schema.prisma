@@ -15,9 +15,41 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  username String @unique
-  password String
+  id        String    @id @default(uuid())
+  username  String    @unique
+  password  String
+  files     File[]
+  folders   Folder[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Folder {
+  id        String    @id @default(uuid())
+  name      String
+  parentId  String?
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    Folder?   @relation("FolderToFolder", fields: [parentId], references: [id])
+  children  Folder[]  @relation("FolderToFolder")
+  files     File[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model File {
+  id            String   @id @default(uuid())
+  originalName  String
+  storedName    String
+  mimeType      String
+  size          Int
+  folderId      String?
+  folder        Folder?  @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isPublic      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Session {

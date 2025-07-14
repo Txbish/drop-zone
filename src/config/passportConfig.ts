@@ -13,7 +13,7 @@ const configurePassport = (): void => {
     
     passport.deserializeUser(async (id: number, done): Promise<void> => {
         try {
-            const user = await prisma.user.findUnique({ where: { id: id } });
+            const user = await prisma.user.findUnique({ where: { id: id.toString() } });
             done(null, user);
         } catch (error) {
             done(error);

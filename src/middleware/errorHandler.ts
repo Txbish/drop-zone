@@ -39,7 +39,6 @@ const errorHandler: ErrorRequestHandler = (
     message = 'Token expired';
   }
 
-  // Log error in development
   if (process.env.NODE_ENV === 'development') {
     console.error('Error:', {
       message: err.message,

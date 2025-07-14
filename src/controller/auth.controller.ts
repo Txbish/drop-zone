@@ -1,15 +1,46 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request,RequestHandler, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import passport from 'passport';
 import prisma from '../database/prismaClient';
+import {body,Result,ValidationError,validationResult} from "express-validator"
 
-const handleLogin = passport.authenticate('local', {
-    successRedirect: '/',
-    failureRedirect: '/login',
+
+
+
+const handleLogin: RequestHandler = (req:Request, res:Response, next:NextFunction) => {
+    try {
+        const errors: Result<ValidationError> = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map((err) => err.msg);
+    req.flash("error", errorMessages.join(", "));
+    return res.redirect("/login");
+  }
+
+  if (req.isAuthenticated()) {
+    req.flash("warning", "Already Authenticated");
+    return res.redirect("/dashboard");
+  }
+
+  passport.authenticate("local", {
+    successRedirect: "/dashboard",
+    failureRedirect: "/login",
     failureFlash: true,
-});
+  })(req, res, next);
+    } catch (error) {
+        res.redirect("/login");
+    }
+  
+};
+
+
 
 const renderLogin = (req: Request, res: Response) => {
+    if (req.isAuthenticated()) {
+        console.log("Already Authenticated");
+        req.flash("warning", "Already Authenticated");
+        return res.redirect("/dashboard");
+      }
     res.render('login', { messages: req.flash(), title: 'Login' });
 };
 
