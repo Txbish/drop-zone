@@ -26,8 +26,8 @@
     Object.keys(flashMessages); const hasMessages = messageKeys.length > 0; %>
     <% if (hasMessages) { %>
     <div class="container messages-container">
-      <% messageKeys.forEach(key => { %> <% flashMessages[key].forEach(message
-      => { %>
+      <% messageKeys.forEach(function(key) { %> <%
+      flashMessages[key].forEach(function(message) { %>
       <div class="message message-<%= key %>">
         <% if (key === 'success') { %><i class="fas fa-check-circle"></i><% } %>
         <% if (key === 'error') { %><i class="fas fa-exclamation-circle"></i><%
@@ -37,12 +37,8 @@
         ><% } %> <% if (key === 'info') { %><i class="fas fa-info-circle"></i><%
         } %> <%= message %>
       </div>
-      <% }) %> <% }) %>
+      <% }); %> <% }); %>
     </div>
     <% } %>
-
-    <main class="container">
-      <!-- Content goes here -->
-    </main>
   </body>
 </html>
