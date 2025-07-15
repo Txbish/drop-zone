@@ -25,7 +25,7 @@ export const getRootFolders: RequestHandler = async (req, res, next) => {
 };
 export const getFolderById: RequestHandler = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
+    const errors:Result<ValidationError> = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ 
         error: 'Validation failed',
@@ -56,7 +56,7 @@ export const getFolderById: RequestHandler = async (req, res, next) => {
 };
 export const createFolder: RequestHandler = async (req, res, next) => { 
   try {
-    const errors = validationResult(req);
+    const errors:Result<ValidationError> = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ 
         error: 'Validation failed',
@@ -97,7 +97,7 @@ export const createFolder: RequestHandler = async (req, res, next) => {
 };
 export const updateFolder: RequestHandler = async (req, res, next) => {
   try {
-    const errors = validationResult(req);
+    const errors:Result<ValidationError> = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ 
         error: 'Validation failed',
@@ -135,7 +135,7 @@ export const updateFolder: RequestHandler = async (req, res, next) => {
 
 export const deleteFolder: RequestHandler = async (req: Request, res: Response, next: NextFunction) => { 
   try {
-    const errors = validationResult(req);
+    const errors:Result<ValidationError> = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ 
         error: 'Validation failed',
