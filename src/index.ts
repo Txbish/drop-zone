@@ -7,6 +7,8 @@ import createError from 'http-errors';
 import errorHandler from './middleware/errorHandler';
 import authRoutes from './routes/auth.routes';
 import folderRoutes from "./routes/folder.routes";
+import fileRoutes from "./routes/file.routes";
+import dashboardRoutes from "./routes/dashboard.routes";
 import flash from 'express-flash';
 import morgan from "morgan"
 dotenv.config();
@@ -33,7 +35,9 @@ const injectUser: RequestHandler = (req: Request, res: Response, next: NextFunct
 app.use(injectUser);
 
 app.use(authRoutes);
-app.use("/folder",folderRoutes);
+app.use("/folders", folderRoutes);
+app.use("/files", fileRoutes);
+app.use("/dashboard", dashboardRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.render('index');
 });

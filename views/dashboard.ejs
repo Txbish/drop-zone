@@ -1,0 +1,195 @@
+<%- include('partials/header', { title: 'Dashboard' }) %>
+
+<div class="dashboard">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2><i class="fas fa-folder-open"></i> File Manager</h2>
+      <div class="sidebar-actions">
+        <button class="btn btn-primary btn-sm" id="new-folder-btn">
+          <i class="fas fa-folder-plus"></i> New Folder
+        </button>
+        <button class="btn btn-secondary btn-sm" id="upload-file-btn">
+          <i class="fas fa-cloud-upload-alt"></i> Upload
+        </button>
+      </div>
+    </div>
+
+    <div class="sidebar-navigation">
+      <div class="nav-item active" data-path="/" data-type="root">
+        <i class="fas fa-home"></i>
+        <span>My Files</span>
+      </div>
+      <div class="nav-item" data-type="public">
+        <i class="fas fa-globe"></i>
+        <span>Public Files</span>
+      </div>
+      <div class="nav-item" data-type="recent">
+        <i class="fas fa-clock"></i>
+        <span>Recent</span>
+      </div>
+    </div>
+
+    <div class="sidebar-content">
+      <div class="breadcrumb" id="breadcrumb">
+        <span class="breadcrumb-item active" data-path="/">
+          <i class="fas fa-home"></i> Home
+        </span>
+      </div>
+
+      <div class="folder-tree" id="folder-tree">
+        <div class="loading">
+          <i class="fas fa-spinner fa-spin"></i> Loading...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <div class="content-header">
+      <div class="view-controls">
+        <button class="view-btn active" data-view="grid">
+          <i class="fas fa-th"></i>
+        </button>
+        <button class="view-btn" data-view="list">
+          <i class="fas fa-list"></i>
+        </button>
+      </div>
+      <div class="search-bar">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search files and folders..."
+        />
+        <i class="fas fa-search"></i>
+      </div>
+      <div class="sort-controls">
+        <select id="sort-select">
+          <option value="name">Sort by Name</option>
+          <option value="date">Sort by Date</option>
+          <option value="size">Sort by Size</option>
+          <option value="type">Sort by Type</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="content-body">
+      <div class="content-area" id="content-area">
+        <div class="loading">
+          <i class="fas fa-spinner fa-spin"></i> Loading content...
+        </div>
+      </div>
+
+      <!-- File/Folder Details Panel -->
+      <div class="details-panel" id="details-panel">
+        <div class="details-header">
+          <h3>Details</h3>
+          <button class="close-btn" id="close-details">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div class="details-content" id="details-content">
+          <p>Select a file or folder to view details</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<!-- New Folder Modal -->
+<div class="modal" id="new-folder-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Create New Folder</h3>
+      <button class="close-modal" data-modal="new-folder-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form id="new-folder-form">
+      <div class="form-group">
+        <label for="folder-name">Folder Name</label>
+        <input type="text" id="folder-name" name="name" required />
+      </div>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-modal="new-folder-modal"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Create Folder</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Upload File Modal -->
+<div class="modal" id="upload-file-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Upload Files</h3>
+      <button class="close-modal" data-modal="upload-file-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <form id="upload-file-form" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="file-input">Select Files</label>
+        <div class="file-drop-zone" id="file-drop-zone">
+          <i class="fas fa-cloud-upload-alt"></i>
+          <p>Drag and drop files here or click to browse</p>
+          <input type="file" id="file-input" name="file" multiple />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="make-public" name="isPublic" />
+          Make files public
+        </label>
+      </div>
+      <div class="upload-progress" id="upload-progress" style="display: none">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <span class="progress-text" id="progress-text">0%</span>
+      </div>
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-modal="upload-file-modal"
+        >
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary">Upload</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="context-menu">
+  <div class="context-item" data-action="download">
+    <i class="fas fa-download"></i> Download
+  </div>
+  <div class="context-item" data-action="rename">
+    <i class="fas fa-edit"></i> Rename
+  </div>
+  <div class="context-item" data-action="move">
+    <i class="fas fa-arrows-alt"></i> Move
+  </div>
+  <div class="context-item" data-action="copy-link">
+    <i class="fas fa-link"></i> Copy Link
+  </div>
+  <div class="context-divider"></div>
+  <div class="context-item context-danger" data-action="delete">
+    <i class="fas fa-trash"></i> Delete
+  </div>
+</div>
+
+<script src="/js/dashboard.js"></script>
+
+<%- include('partials/footer') %>

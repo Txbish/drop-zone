@@ -61,14 +61,20 @@ const handleSignup = async (req: Request, res: Response) => {
                 password: hashedPassword,
             },
         });
+        req.flash('success', 'Account created successfully! Please log in.');
         res.redirect('/login');
     } catch (error) {
+        req.flash('error', 'Failed to create account. Please try again.');
         res.redirect('/signup');
     }
 };
 
 const renderSignup = (req: Request, res: Response) => {
-    res.render('signup', { title: 'Sign Up' });
+    if (req.isAuthenticated()) {
+        req.flash("warning", "Already Authenticated");
+        return res.redirect("/dashboard");
+    }
+    res.render('signup', { messages: req.flash(), title: 'Sign Up' });
 };
 
 const handleLogout = (req: Request, res: Response, next: NextFunction) => {
@@ -76,6 +82,7 @@ const handleLogout = (req: Request, res: Response, next: NextFunction) => {
         if (err) {
             return next(err);
         }
+        req.flash('success', 'Successfully logged out');
         res.redirect('/');
     });
 };
