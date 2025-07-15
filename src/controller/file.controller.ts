@@ -1,8 +1,7 @@
 import { Request, RequestHandler, Response, NextFunction } from 'express';
 import prisma from '../database/prismaClient';
 import { body, Result, ValidationError, validationResult } from "express-validator";
-import fs from 'fs';
-import path from 'path';
+import { cloudinary } from '../config/cloudinaryConfig';
 import { Prisma } from '../generated/prisma';
 
 export const uploadFile: RequestHandler = async (req, res, next) => {
@@ -33,22 +32,27 @@ export const uploadFile: RequestHandler = async (req, res, next) => {
       });
 
       if (!folder || folder.userId !== userId) {
-        // Clean up uploaded file if folder validation fails
-        if (req.file && req.file.path) {
+        // Delete from Cloudinary if folder validation fails
+        if (req.file && (req.file as any).public_id) {
           try {
-            fs.unlinkSync(req.file.path);
+            await cloudinary.uploader.destroy((req.file as any).public_id);
           } catch (cleanupError) {
-            console.error('Error cleaning up file:', cleanupError);
+            console.error('Error cleaning up Cloudinary file:', cleanupError);
           }
         }
         return res.status(404).json({ error: 'Folder not found or access denied' });
       }
     }
 
+    // Extract Cloudinary file information
+    const cloudinaryFile = req.file as any;
+    
     const file = await prisma.file.create({
       data: {
         originalName: req.file.originalname,
-        storedName: req.file.filename,
+        storedName: cloudinaryFile.public_id, // Cloudinary public_id
+        cloudinaryUrl: cloudinaryFile.url,
+        secureUrl: cloudinaryFile.secure_url,
         mimeType: req.file.mimetype,
         size: req.file.size,
         userId: userId,
@@ -65,15 +69,17 @@ export const uploadFile: RequestHandler = async (req, res, next) => {
         size: file.size,
         mimeType: file.mimeType,
         isPublic: file.isPublic,
+        url: file.secureUrl,
         createdAt: file.createdAt
       }
     });
   } catch (error) {
-    if (req.file) {
+    // Clean up Cloudinary file if database operation fails
+    if (req.file && (req.file as any).public_id) {
       try {
-        fs.unlinkSync(req.file.path);
+        await cloudinary.uploader.destroy((req.file as any).public_id);
       } catch (cleanupError) {
-        console.error('Error cleaning up file:', cleanupError);
+        console.error('Error cleaning up Cloudinary file:', cleanupError);
       }
     }
     next(error);
@@ -114,20 +120,21 @@ export const getFile: RequestHandler = async (req, res, next) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const filePath = path.join(process.cwd(), 'uploads', file.storedName);
+    // For Cloudinary files, redirect to the secure URL
+    if (file.secureUrl) {
+      return res.redirect(file.secureUrl);
+    }
     
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found on disk' });
+    // Fallback: if no Cloudinary URL, try to generate one from public_id
+    if (file.storedName) {
+      const cloudinaryUrl = cloudinary.url(file.storedName, {
+        secure: true,
+        resource_type: 'auto'
+      });
+      return res.redirect(cloudinaryUrl);
     }
 
-    // Set appropriate headers
-    res.setHeader('Content-Type', file.mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${file.originalName}"`);
-    res.setHeader('Content-Length', file.size);
-
-    // Stream the file
-    const fileStream = fs.createReadStream(filePath);
-    fileStream.pipe(res);
+    return res.status(404).json({ error: 'File URL not available' });
   } catch (error) {
     next(error);
   }
@@ -228,15 +235,14 @@ export const deleteFile: RequestHandler = async (req, res, next) => {
       where: { id: fileId }
     });
 
-    // Delete physical file
-    const filePath = path.join(process.cwd(), 'uploads', file.storedName);
-    try {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
+    // Delete file from Cloudinary
+    if (file.storedName) {
+      try {
+        await cloudinary.uploader.destroy(file.storedName);
+      } catch (cloudinaryError) {
+        console.error('Error deleting file from Cloudinary:', cloudinaryError);
+        // Continue anyway - database record is deleted
       }
-    } catch (fileDeleteError) {
-      console.error('Error deleting physical file:', fileDeleteError);
-      // Continue anyway - database record is deleted
     }
 
     res.status(200).json({ message: 'File deleted successfully' });

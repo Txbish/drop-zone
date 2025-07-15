@@ -581,7 +581,7 @@ class Dashboard {
     }
 
     // Handle isPublic checkbox - convert to proper boolean
-    const isPublicCheckbox = e.target.querySelector('#make-public');
+    const isPublicCheckbox = e.target.querySelector("#make-public");
     if (isPublicCheckbox) {
       // Remove the original isPublic value that might be "on" string
       formData.delete("isPublic");

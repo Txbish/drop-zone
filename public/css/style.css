@@ -391,7 +391,7 @@ body {
 }
 
 .folder-tree {
-  padding: 1rem 0;
+  padding: 1rem 1rem;
 }
 
 .tree-item {
@@ -955,4 +955,105 @@ body {
 .content-area::-webkit-scrollbar-thumb:hover,
 .details-panel::-webkit-scrollbar-thumb:hover {
   background: var(--highlight-color);
+}
+
+/* Context Menu */
+.context-menu {
+  position: fixed;
+  display: none;
+  background: var(--primary-color);
+  border: 1px solid var(--accent-color);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+.context-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-color);
+  transition: background-color var(--transition-speed);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.context-item:hover {
+  background-color: var(--accent-color);
+}
+
+.context-item.context-danger {
+  color: var(--highlight-color);
+}
+
+.context-item.context-danger:hover {
+  background-color: rgba(233, 69, 96, 0.1);
+}
+
+.context-divider {
+  height: 1px;
+  background-color: var(--accent-color);
+  margin: 4px 0;
+}
+
+.context-item i {
+  width: 16px;
+  text-align: center;
+}
+
+/* Move Modal Folder Tree */
+.folder-tree-container {
+  border: 1px solid var(--accent-color);
+  border-radius: var(--border-radius);
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg-color);
+  margin: 10px 0;
+}
+
+.folder-tree-container .tree-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background-color var(--transition-speed);
+}
+
+.folder-tree-container .tree-item:hover {
+  background-color: var(--accent-color);
+}
+
+.folder-tree-container .tree-item.selected {
+  background-color: var(--highlight-color);
+  color: white;
+}
+
+.folder-tree-container .tree-item:last-child {
+  border-bottom: none;
+}
+
+.folder-tree-container .tree-item i {
+  color: var(--subtle-text);
+  width: 16px;
+}
+
+.folder-tree-container .root-folder {
+  font-weight: 500;
+  background-color: var(--primary-color);
+}
+
+.current-location {
+  color: var(--subtle-text);
+  font-size: 12px;
+  margin-top: 10px;
 }

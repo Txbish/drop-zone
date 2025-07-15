@@ -19,8 +19,8 @@ build/
 # Generated files
 /src/generated/
 
-# Uploads (user files)
-/uploads/
+# Uploads (not needed with Cloudinary, but keeping for migration purposes)
+# /uploads/
 
 # Logs
 logs
