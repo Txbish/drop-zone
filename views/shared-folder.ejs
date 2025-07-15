@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shared Folder - <%= folder.name %></title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .shared-folder-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .shared-folder-header h1 {
+            margin: 0 0 0.5rem 0;
+            font-size: 2rem;
+        }
+        
+        .shared-info {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .shared-info-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .shared-info-item strong {
+            display: block;
+            font-size: 0.85rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .files-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .file-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .file-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            background: #f0f0f0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .file-icon.image { background: #e3f2fd; color: #1976d2; }
+        .file-icon.document { background: #f3e5f5; color: #7b1fa2; }
+        .file-icon.video { background: #e8f5e8; color: #388e3c; }
+        .file-icon.audio { background: #fff3e0; color: #f57c00; }
+        .file-icon.archive { background: #fce4ec; color: #c2185b; }
+        
+        .file-name {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            word-break: break-word;
+        }
+        
+        .file-meta {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .download-btn {
+            width: 100%;
+            padding: 0.75rem;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .download-btn:hover {
+            background: #1976d2;
+            color: white;
+        }
+        
+        .no-files {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        .no-files-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+        
+        .subfolder-section {
+            margin-top: 2rem;
+        }
+        
+        .subfolder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .subfolder-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background: white;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subfolder-icon {
+            font-size: 2rem;
+            color: #ffa726;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stats-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2196f3;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .shared-info {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .files-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="shared-folder-header">
+            <h1>📁 <%= folder.name %></h1>
+            <p>Shared by <strong><%= folder.owner %></strong></p>
+            <div class="shared-info">
+                <div class="shared-info-item">
+                    <strong>Shared on</strong>
+                    <%= new Date(folder.sharedAt).toLocaleDateString() %>
+                </div>
+                <div class="shared-info-item">
+                    <strong>Expires on</strong>
+                    <%= new Date(folder.expiresAt).toLocaleDateString() %>
+                </div>
+                <div class="shared-info-item">
+                    <strong>Total Files</strong>
+                    <%= totalFiles %>
+                </div>
+            </div>
+        </div>
+
+        <% if (files.length > 0 || subfolders.length > 0) { %>
+            <div class="stats-section">
+                <h3>Folder Contents</h3>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value"><%= files.length %></div>
+                        <div class="stat-label">Direct Files</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value"><%= subfolders.length %></div>
+                        <div class="stat-label">Subfolders</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value"><%= totalFiles %></div>
+                        <div class="stat-label">Total Files</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">
+                            <%= (allFiles.reduce((acc, file) => acc + (file.size || 0), 0) / (1024 * 1024)).toFixed(2) %> MB
+                        </div>
+                        <div class="stat-label">Total Size</div>
+                    </div>
+                </div>
+            </div>
+
+            <% if (subfolders.length > 0) { %>
+                <div class="subfolder-section">
+                    <h3>Subfolders</h3>
+                    <div class="subfolder-grid">
+                        <% subfolders.forEach(subfolder => { %>
+                            <div class="subfolder-card">
+                                <div class="subfolder-icon">📁</div>
+                                <div class="file-name"><%= subfolder.name %></div>
+                                <div class="file-meta">
+                                    Created: <%= new Date(subfolder.createdAt).toLocaleDateString() %>
+                                </div>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
+
+            <% if (files.length > 0) { %>
+                <div class="files-section">
+                    <h3>Files in this folder</h3>
+                    <div class="files-grid">
+                        <% files.forEach(file => { 
+                            let fileIcon = '📄';
+                            let iconClass = 'document';
+                            
+                            if (file.mimeType) {
+                                if (file.mimeType.startsWith('image/')) {
+                                    fileIcon = '🖼️';
+                                    iconClass = 'image';
+                                } else if (file.mimeType.startsWith('video/')) {
+                                    fileIcon = '🎬';
+                                    iconClass = 'video';
+                                } else if (file.mimeType.startsWith('audio/')) {
+                                    fileIcon = '🎵';
+                                    iconClass = 'audio';
+                                } else if (file.mimeType.includes('zip') || file.mimeType.includes('archive')) {
+                                    fileIcon = '📦';
+                                    iconClass = 'archive';
+                                }
+                            }
+                        %>
+                            <div class="file-card">
+                                <div class="file-icon <%= iconClass %>">
+                                    <%= fileIcon %>
+                                </div>
+                                <div class="file-name"><%= file.originalName %></div>
+                                <div class="file-meta">
+                                    <div>Size: <%= (file.size / 1024).toFixed(2) %> KB</div>
+                                    <div>Type: <%= file.mimeType || 'Unknown' %></div>
+                                    <div>Uploaded: <%= new Date(file.createdAt).toLocaleDateString() %></div>
+                                </div>
+                                <a href="<%= file.secureUrl %>" 
+                                   class="download-btn" 
+                                   download="<%= file.originalName %>"
+                                   target="_blank">
+                                    📥 Download
+                                </a>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
+
+            <% if (allFiles.length > files.length) { %>
+                <div class="files-section">
+                    <h3>All Files (including from subfolders)</h3>
+                    <div class="files-grid">
+                        <% allFiles.forEach(file => { 
+                            let fileIcon = '📄';
+                            let iconClass = 'document';
+                            
+                            if (file.mimeType) {
+                                if (file.mimeType.startsWith('image/')) {
+                                    fileIcon = '🖼️';
+                                    iconClass = 'image';
+                                } else if (file.mimeType.startsWith('video/')) {
+                                    fileIcon = '🎬';
+                                    iconClass = 'video';
+                                } else if (file.mimeType.startsWith('audio/')) {
+                                    fileIcon = '🎵';
+                                    iconClass = 'audio';
+                                } else if (file.mimeType.includes('zip') || file.mimeType.includes('archive')) {
+                                    fileIcon = '📦';
+                                    iconClass = 'archive';
+                                }
+                            }
+                        %>
+                            <div class="file-card">
+                                <div class="file-icon <%= iconClass %>">
+                                    <%= fileIcon %>
+                                </div>
+                                <div class="file-name"><%= file.originalName %></div>
+                                <div class="file-meta">
+                                    <div>Size: <%= (file.size / 1024).toFixed(2) %> KB</div>
+                                    <div>Type: <%= file.mimeType || 'Unknown' %></div>
+                                    <div>Uploaded: <%= new Date(file.createdAt).toLocaleDateString() %></div>
+                                </div>
+                                <a href="<%= file.secureUrl %>" 
+                                   class="download-btn" 
+                                   download="<%= file.originalName %>"
+                                   target="_blank">
+                                    📥 Download
+                                </a>
+                            </div>
+                        <% }); %>
+                    </div>
+                </div>
+            <% } %>
+        <% } else { %>
+            <div class="no-files">
+                <div class="no-files-icon">📂</div>
+                <h3>This folder is empty</h3>
+                <p>There are no files or subfolders in this shared folder.</p>
+            </div>
+        <% } %>
+    </div>
+</body>
+</html>

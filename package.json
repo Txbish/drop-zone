@@ -21,6 +21,7 @@
   "dependencies": {
     "@quixo3/prisma-session-store": "^3.1.13",
     "@types/multer": "^2.0.0",
+    "@types/uuid": "^10.0.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^1.41.3",
     "ejs": "^3.1.10",
@@ -33,7 +34,8 @@
     "multer": "^2.0.1",
     "multer-storage-cloudinary": "^4.0.0",
     "passport": "^0.7.0",
-    "passport-local": "^1.0.0"
+    "passport-local": "^1.0.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

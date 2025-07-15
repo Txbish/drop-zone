@@ -152,6 +152,74 @@ class Dashboard {
 
     // File drop
     this.bindFileDropEvents();
+
+    // Share form submission
+    document
+      .getElementById("share-form")
+      .addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const modal = document.getElementById("share-modal");
+        const folderId = modal.dataset.folderId;
+        const duration = document.querySelector('input[name="duration"]:checked')?.value;
+
+        if (!duration) {
+          this.showMessage("error", "Please select a duration");
+          return;
+        }
+
+        try {
+          const submitButton = e.target.querySelector('button[type="submit"]');
+          const originalText = submitButton.innerHTML;
+          submitButton.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Creating...';
+          submitButton.disabled = true;
+
+          const shareData = await this.createFolderShare(folderId, duration);
+          this.showShareCreated(shareData);
+          this.showMessage("success", "Share link created successfully!");
+        } catch (error) {
+          // Check if this is a "folder already has share" error
+          if (error.message.includes('already has an active share') && error.shareData) {
+            this.showExistingShare(error.shareData);
+          } else {
+            this.showMessage("error", error.message);
+          }
+        } finally {
+          const submitButton = e.target.querySelector('button[type="submit"]');
+          submitButton.innerHTML =
+            '<i class="fas fa-share-alt"></i> Generate Share Link';
+          submitButton.disabled = false;
+        }
+      });
+
+    // Copy share link button
+    document.getElementById("copy-share-link").addEventListener("click", () => {
+      this.copyShareLinkToClipboard();
+    });
+
+    // Manage shares button
+    document
+      .getElementById("manage-shares-btn")
+      .addEventListener("click", () => {
+        this.showManageShares();
+      });
+
+    // Back to create button
+    document.getElementById("back-to-create").addEventListener("click", () => {
+      this.showCreateShare();
+    });
+
+    // Context menu type detection
+    document.addEventListener("contextmenu", (e) => {
+      const itemEl = e.target.closest(".grid-item, .list-item");
+      const contextMenu = document.getElementById("context-menu");
+
+      if (itemEl) {
+        const itemType = itemEl.dataset.type;
+        contextMenu.dataset.type = itemType;
+      }
+    });
   }
 
   bindModalEvents() {
@@ -519,13 +587,20 @@ class Dashboard {
     menu.style.left = `${e.pageX}px`;
     menu.style.top = `${e.pageY}px`;
 
+    const itemType = item.dataset.type;
     menu.dataset.itemId = item.dataset.id;
-    menu.dataset.itemType = item.dataset.type;
+    menu.dataset.itemType = itemType;
 
     // Store the item name for rename functionality
     const itemNameEl = item.querySelector(".item-name");
     const itemName = itemNameEl ? itemNameEl.textContent.trim() : "";
     menu.dataset.itemName = itemName;
+
+    // Show/hide folder-specific options
+    const folderOnlyItems = menu.querySelectorAll(".folder-only");
+    folderOnlyItems.forEach((item) => {
+      item.style.display = itemType === "folder" ? "flex" : "none";
+    });
   }
 
   hideContextMenu() {
@@ -852,6 +927,29 @@ class Dashboard {
     }, 100);
   }
 
+  // Function to rename item from details panel
+  renameItem(itemId, itemType) {
+    // Find the current name from the details panel or content
+    const detailsContent = document.getElementById("details-content");
+    const nameElement = detailsContent.querySelector(".detail-item strong");
+    let currentName = "";
+
+    if (nameElement && nameElement.nextSibling) {
+      currentName = nameElement.nextSibling.textContent.trim();
+    }
+
+    // Fall back to finding it in the main content area
+    if (!currentName) {
+      const itemElement = document.querySelector(`[data-id="${itemId}"]`);
+      if (itemElement) {
+        const nameEl = itemElement.querySelector(".item-name");
+        currentName = nameEl ? nameEl.textContent.trim() : "";
+      }
+    }
+
+    this.showRenameModal(itemId, itemType, currentName);
+  }
+
   async showMoveModal(itemId, itemType, itemName) {
     const modal = document.getElementById("move-modal");
     const form = document.getElementById("move-form");
@@ -1088,10 +1186,260 @@ class Dashboard {
     return "fas fa-file";
   }
 
-  // Utility function for copying share links (placeholder)
-  copyShareLink(itemId, itemType) {
-    // This would need to be implemented based on your sharing functionality
-    this.showMessage("info", "Share link feature not implemented yet");
+  // Utility function for copying share links
+
+  // Share folder functionality
+  async showShareModal(folderId, folderName) {
+    const modal = document.getElementById("share-modal");
+    const folderNameSpan = document.getElementById("share-folder-name");
+    const createSection = document.getElementById("create-share-section");
+    const createdSection = document.getElementById("share-created-section");
+    const sharesSection = document.getElementById("my-shares-section");
+
+    // Store folder info in modal
+    modal.dataset.folderId = folderId;
+    modal.dataset.folderName = folderName;
+
+    // Update modal title
+    folderNameSpan.textContent = folderName;
+
+    // Reset sections
+    createSection.style.display = "block";
+    createdSection.style.display = "none";
+    sharesSection.style.display = "none";
+
+    // Reset form
+    document.getElementById("share-form").reset();
+
+    this.showModal("share-modal");
+  }
+
+  async createFolderShare(folderId, duration) {
+    try {
+      const response = await fetch("/share/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          folderId: folderId,
+          duration: duration,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to create share");
+      }
+
+      return result.share;
+    } catch (error) {
+      console.error("Error creating folder share:", error);
+      throw error;
+    }
+  }
+
+  showShareCreated(shareData) {
+    const createSection = document.getElementById("create-share-section");
+    const createdSection = document.getElementById("share-created-section");
+    const shareLinkInput = document.getElementById("share-link");
+    const expiresSpan = document.getElementById("share-expires-date");
+    const createdSpan = document.getElementById("share-created-date");
+
+    // Hide create form and show success
+    createSection.style.display = "none";
+    createdSection.style.display = "block";
+
+    // Populate share data
+    shareLinkInput.value = shareData.shareUrl;
+    expiresSpan.textContent = new Date(shareData.expiresAt).toLocaleString();
+    createdSpan.textContent = new Date(shareData.createdAt).toLocaleString();
+  }
+
+  async copyShareLinkToClipboard() {
+    const shareLinkInput = document.getElementById("share-link");
+    try {
+      await navigator.clipboard.writeText(shareLinkInput.value);
+      this.showMessage("success", "Share link copied to clipboard!");
+    } catch (error) {
+      // Fallback for older browsers
+      shareLinkInput.select();
+      shareLinkInput.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      this.showMessage("success", "Share link copied to clipboard!");
+    }
+  }
+
+  async loadUserShares() {
+    const sharesSection = document.getElementById("my-shares-section");
+    const sharesList = document.getElementById("shares-list");
+    const loading = document.getElementById("shares-loading");
+
+    try {
+      loading.style.display = "block";
+
+      const response = await fetch("/share/my-shares");
+      if (!response.ok) throw new Error("Failed to load shares");
+
+      const data = await response.json();
+      const shares = data.shares || [];
+
+      loading.style.display = "none";
+
+      if (shares.length === 0) {
+        sharesList.innerHTML = `
+          <div class="empty-shares">
+            <i class="fas fa-share-alt"></i>
+            <h4>No shares yet</h4>
+            <p>You haven't shared any folders yet.</p>
+          </div>
+        `;
+      } else {
+        sharesList.innerHTML = shares
+          .map((share) => this.renderShareItem(share))
+          .join("");
+      }
+    } catch (error) {
+      loading.style.display = "none";
+      this.showMessage("error", "Failed to load shares");
+    }
+  }
+
+  renderShareItem(share) {
+    const isExpired = new Date(share.expiresAt) < new Date();
+    const statusClass = !share.isActive
+      ? "inactive"
+      : isExpired
+      ? "expired"
+      : "active";
+    const statusText = !share.isActive
+      ? "inactive"
+      : isExpired
+      ? "expired"
+      : "active";
+
+    return `
+      <div class="share-item-new">
+        <div class="share-item-info">
+          <div class="share-item-name">
+            <i class="fas fa-folder"></i> ${share.folder.name}
+          </div>
+          <div class="share-item-meta">
+            <span><i class="fas fa-calendar-plus"></i> Created: ${new Date(
+              share.createdAt
+            ).toLocaleDateString()}</span>
+            <span><i class="fas fa-clock"></i> Expires: ${new Date(
+              share.expiresAt
+            ).toLocaleDateString()}</span>
+            <span><i class="fas fa-eye"></i> Accessed: ${share.accessCount} times</span>
+          </div>
+        </div>
+        <div class="share-item-actions">
+          <span class="share-status ${statusClass}">${statusText}</span>
+          ${
+            share.isActive && !isExpired
+              ? `
+            <button class="btn btn-secondary btn-icon" onclick="dashboard.copyShareUrl('${share.shareUrl}')" title="Copy Link">
+              <i class="fas fa-copy"></i>
+            </button>
+            <button class="btn btn-secondary btn-icon" onclick="dashboard.extendShare('${share.shareToken}')" title="Extend">
+              <i class="fas fa-clock"></i>
+            </button>
+            <button class="btn btn-secondary btn-icon" onclick="dashboard.deactivateShare('${share.shareToken}')" title="Deactivate">
+              <i class="fas fa-times"></i>
+            </button>
+          `
+              : `
+            <button class="btn btn-secondary btn-icon" onclick="dashboard.reactivateShare('${
+              share.shareToken
+            }')" title="Reactivate" ${isExpired ? "disabled" : ""}>
+              <i class="fas fa-play"></i>
+            </button>
+          `
+          }
+        </div>
+      </div>
+    `;
+  }
+
+  async copyShareUrl(shareUrl) {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      this.showMessage("success", "Share link copied to clipboard!");
+    } catch (error) {
+      this.showMessage("error", "Failed to copy link");
+    }
+  }
+
+  async deactivateShare(shareToken) {
+    if (!confirm("Are you sure you want to deactivate this share?")) return;
+
+    try {
+      const response = await fetch(`/share/deactivate/${shareToken}`, {
+        method: "PATCH",
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to deactivate share");
+      }
+
+      this.showMessage("success", "Share deactivated successfully");
+      this.loadUserShares(); // Refresh the list
+    } catch (error) {
+      this.showMessage("error", error.message);
+    }
+  }
+
+  async extendShare(shareToken) {
+    const duration = prompt(
+      "Enter extension duration (e.g., '7d', '1h', '30m'):",
+      "7d"
+    );
+    if (!duration) return;
+
+    try {
+      const response = await fetch(`/share/extend/${shareToken}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ duration }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to extend share");
+      }
+
+      this.showMessage("success", "Share extended successfully");
+      this.loadUserShares(); // Refresh the list
+    } catch (error) {
+      this.showMessage("error", error.message);
+    }
+  }
+
+  showManageShares() {
+    const createSection = document.getElementById("create-share-section");
+    const createdSection = document.getElementById("share-created-section");
+    const sharesSection = document.getElementById("my-shares-section");
+
+    createSection.style.display = "none";
+    createdSection.style.display = "none";
+    sharesSection.style.display = "block";
+
+    this.loadUserShares();
+  }
+
+  showCreateShare() {
+    const createSection = document.getElementById("create-share-section");
+    const createdSection = document.getElementById("share-created-section");
+    const sharesSection = document.getElementById("my-shares-section");
+
+    createSection.style.display = "block";
+    createdSection.style.display = "none";
+    sharesSection.style.display = "none";
   }
 }
 
@@ -1134,6 +1482,13 @@ document.getElementById("context-menu").addEventListener("click", (e) => {
       break;
     case "move":
       dashboard.showMoveModal(itemId, itemType, itemName);
+      break;
+    case "share":
+      if (itemType === "folder") {
+        dashboard.showShareModal(itemId, itemName);
+      } else {
+        dashboard.showMessage("info", "Only folders can be shared");
+      }
       break;
     default:
       console.log("Unknown action:", action);

@@ -247,6 +247,198 @@
   </div>
 </div>
 
+<!-- Share Folder Modal -->
+<div class="modal" id="share-modal">
+  <div class="modal-content share-modal-content">
+    <div class="modal-header share-modal-header">
+      <div class="share-modal-title">
+        <div class="share-icon-wrapper">
+          <i class="fas fa-share-alt"></i>
+        </div>
+        <div class="title-content">
+          <h3>Share Folder</h3>
+          <p class="folder-name-subtitle"><span id="share-folder-name">Folder</span></p>
+        </div>
+      </div>
+      <button class="close-modal" data-modal="share-modal">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body share-modal-body">
+      <!-- Create Share Form -->
+      <div id="create-share-section" class="share-section">
+        <div class="share-intro">
+          <h4><i class="fas fa-magic"></i> Create Share Link</h4>
+          <p>Generate a secure link to share this folder and all its contents with others. No account required for viewers.</p>
+        </div>
+        
+        <form id="share-form" class="share-form">
+          <div class="form-group enhanced-form-group">
+            <label for="share-duration">
+              <i class="fas fa-clock"></i> Duration
+            </label>
+            <div class="duration-grid">
+              <div class="duration-option" data-value="1h">
+                <input type="radio" name="duration" value="1h" id="duration-1h">
+                <label for="duration-1h">
+                  <div class="duration-icon"><i class="fas fa-hourglass-start"></i></div>
+                  <div class="duration-text">
+                    <span class="duration-title">1 Hour</span>
+                    <span class="duration-desc">Quick share</span>
+                  </div>
+                </label>
+              </div>
+              <div class="duration-option" data-value="1d">
+                <input type="radio" name="duration" value="1d" id="duration-1d" checked>
+                <label for="duration-1d">
+                  <div class="duration-icon"><i class="fas fa-sun"></i></div>
+                  <div class="duration-text">
+                    <span class="duration-title">1 Day</span>
+                    <span class="duration-desc">Most popular</span>
+                  </div>
+                </label>
+              </div>
+              <div class="duration-option" data-value="7d">
+                <input type="radio" name="duration" value="7d" id="duration-7d">
+                <label for="duration-7d">
+                  <div class="duration-icon"><i class="fas fa-calendar-week"></i></div>
+                  <div class="duration-text">
+                    <span class="duration-title">1 Week</span>
+                    <span class="duration-desc">Extended access</span>
+                  </div>
+                </label>
+              </div>
+              <div class="duration-option" data-value="30d">
+                <input type="radio" name="duration" value="30d" id="duration-30d">
+                <label for="duration-30d">
+                  <div class="duration-icon"><i class="fas fa-calendar-alt"></i></div>
+                  <div class="duration-text">
+                    <span class="duration-title">1 Month</span>
+                    <span class="duration-desc">Long term</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="share-features">
+            <div class="feature-item">
+              <i class="fas fa-shield-alt"></i>
+              <span>Secure & encrypted</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-users"></i>
+              <span>No account required</span>
+            </div>
+            <div class="feature-item">
+              <i class="fas fa-chart-line"></i>
+              <span>Track access</span>
+            </div>
+          </div>
+          
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" data-modal="share-modal">
+              <i class="fas fa-times"></i> Cancel
+            </button>
+            <button type="submit" class="btn btn-primary btn-gradient">
+              <i class="fas fa-share-alt"></i> Generate Share Link
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Share Created Section -->
+      <div id="share-created-section" class="share-section" style="display: none">
+        <div class="share-success-new">
+          <div class="success-animation">
+            <div class="success-icon-new">
+              <i class="fas fa-check"></i>
+            </div>
+            <div class="success-confetti"></div>
+          </div>
+          <h4>🎉 Share Link Created!</h4>
+          <p>Your folder is now accessible via the secure link below. Share it with anyone!</p>
+        </div>
+
+        <div class="share-link-container-new">
+          <label for="share-link">
+            <i class="fas fa-link"></i> Your Share Link
+          </label>
+          <div class="share-link-wrapper">
+            <div class="share-link-display">
+              <input type="text" id="share-link" readonly class="share-link-input-new" />
+              <button type="button" class="copy-btn" id="copy-share-link" title="Copy to clipboard">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+            <div class="link-actions">
+              <button type="button" class="action-btn" onclick="window.open(document.getElementById('share-link').value)">
+                <i class="fas fa-external-link-alt"></i> Preview
+              </button>
+              <button type="button" class="action-btn" id="qr-code-btn">
+                <i class="fas fa-qrcode"></i> QR Code
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="share-stats">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Expires</span>
+              <span class="stat-value" id="share-expires-date">-</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-calendar-plus"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Created</span>
+              <span class="stat-value" id="share-created-date">-</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" data-modal="share-modal">
+            <i class="fas fa-check"></i> Done
+          </button>
+          <button type="button" class="btn btn-outline" id="manage-shares-btn">
+            <i class="fas fa-cog"></i> Manage All Shares
+          </button>
+        </div>
+      </div>
+
+      <!-- My Shares Section -->
+      <div id="my-shares-section" class="share-section" style="display: none">
+        <div class="shares-header-new">
+          <div class="header-content">
+            <h4><i class="fas fa-folder-open"></i> My Shared Folders</h4>
+            <p>Manage and monitor all your folder shares</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-sm" id="back-to-create">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+        </div>
+
+        <div class="shares-list-new" id="shares-list">
+          <div class="loading shares-loading" id="shares-loading">
+            <div class="loading-spinner">
+              <i class="fas fa-circle-notch fa-spin"></i>
+            </div>
+            <span>Loading your shares...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Context Menu -->
 <div class="context-menu" id="context-menu">
   <div class="context-item" data-action="download">
@@ -258,8 +450,8 @@
   <div class="context-item" data-action="move">
     <i class="fas fa-arrows-alt"></i> Move
   </div>
-  <div class="context-item" data-action="copy-link">
-    <i class="fas fa-link"></i> Copy Link
+  <div class="context-item folder-only" data-action="share">
+    <i class="fas fa-share-alt"></i> Share Folder
   </div>
   <div class="context-divider"></div>
   <div class="context-item context-danger" data-action="delete">

@@ -27,20 +27,16 @@ const ALLOWED_FORMATS = [
 // Create Cloudinary storage configuration
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: {
-    folder: 'file-uploader', // Folder in Cloudinary
-    allowed_formats: ALLOWED_FORMATS,
-    resource_type: 'auto', // Automatically detect resource type
-    use_filename: true,
-    unique_filename: true,
-    // Transform for images to optimize storage
-    transformation: [
-      {
-        quality: 'auto',
-        fetch_format: 'auto'
-      }
-    ]
-  } as any
+  params: (req, file) => {
+    return {
+      folder: 'file-uploader',
+      resource_type: 'auto', // Auto-detect the resource type
+      use_filename: true,
+      unique_filename: true,
+      // Remove allowed_formats to be more permissive
+      // Cloudinary will handle most file types automatically
+    };
+  }
 });
 
 export { cloudinary, storage };

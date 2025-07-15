@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.routes';
 import folderRoutes from "./routes/folder.routes";
 import fileRoutes from "./routes/file.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
+import shareRoutes from "./routes/share.routes";
 import flash from 'express-flash';
 import morgan from "morgan"
 dotenv.config();
@@ -38,6 +39,7 @@ app.use(authRoutes);
 app.use("/folders", folderRoutes);
 app.use("/files", fileRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/share", shareRoutes);
 app.get('/', (req: Request, res: Response) => {
   res.render('index');
 });

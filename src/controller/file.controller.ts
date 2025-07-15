@@ -39,6 +39,12 @@ export const uploadFile: RequestHandler = async (req, res, next) => {
           } catch (cleanupError) {
             console.error('Error cleaning up Cloudinary file:', cleanupError);
           }
+        } else if (req.file && (req.file as any).filename) {
+          try {
+            await cloudinary.uploader.destroy((req.file as any).filename);
+          } catch (cleanupError) {
+            console.error('Error cleaning up Cloudinary file:', cleanupError);
+          }
         }
         return res.status(404).json({ error: 'Folder not found or access denied' });
       }
@@ -47,12 +53,20 @@ export const uploadFile: RequestHandler = async (req, res, next) => {
     // Extract Cloudinary file information
     const cloudinaryFile = req.file as any;
     
+    // Debug log to see the actual structure
+    console.log('Cloudinary file object:', JSON.stringify(cloudinaryFile, null, 2));
+    
+    // Handle different possible property names from Cloudinary
+    const publicId = cloudinaryFile.public_id || cloudinaryFile.filename || cloudinaryFile.originalname;
+    const cloudinaryUrl = cloudinaryFile.url || cloudinaryFile.path;
+    const secureUrl = cloudinaryFile.secure_url || cloudinaryFile.url || cloudinaryFile.path;
+    
     const file = await prisma.file.create({
       data: {
         originalName: req.file.originalname,
-        storedName: cloudinaryFile.public_id, // Cloudinary public_id
-        cloudinaryUrl: cloudinaryFile.url,
-        secureUrl: cloudinaryFile.secure_url,
+        storedName: publicId, // Cloudinary public_id or fallback
+        cloudinaryUrl: cloudinaryUrl,
+        secureUrl: secureUrl,
         mimeType: req.file.mimetype,
         size: req.file.size,
         userId: userId,
@@ -75,11 +89,14 @@ export const uploadFile: RequestHandler = async (req, res, next) => {
     });
   } catch (error) {
     // Clean up Cloudinary file if database operation fails
-    if (req.file && (req.file as any).public_id) {
-      try {
-        await cloudinary.uploader.destroy((req.file as any).public_id);
-      } catch (cleanupError) {
-        console.error('Error cleaning up Cloudinary file:', cleanupError);
+    if (req.file) {
+      const fileId = (req.file as any).public_id || (req.file as any).filename;
+      if (fileId) {
+        try {
+          await cloudinary.uploader.destroy(fileId);
+        } catch (cleanupError) {
+          console.error('Error cleaning up Cloudinary file:', cleanupError);
+        }
       }
     }
     next(error);
