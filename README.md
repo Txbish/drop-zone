@@ -4,14 +4,14 @@
 
 ![DropZone Logo](https://img.shields.io/badge/DropZone-File%20Sharing-blue?style=for-the-badge&logo=dropbox&logoColor=white)
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-drop--zone.onrender.app-success?style=for-the-badge&logo=render)](https://drop-zone.onrender.app)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-drop--zone.onrender.com-success?style=for-the-badge&logo=render)](https://drop-zone.onrender.com)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-3982CE?style=for-the-badge&logo=Prisma&logoColor=white)](https://prisma.io/)
 
-*The simplest and most secure way to share your files with anyone, anywhere.*
+_The simplest and most secure way to share your files with anyone, anywhere._
 
 [🌟 Features](#-features) • [🚀 Live Demo](#-live-demo) • [⚡ Quick Start](#-quick-start) • [📚 API](#-api-documentation) • [🛠️ Tech Stack](#️-tech-stack)
 
@@ -22,11 +22,13 @@
 ## 🌟 Features
 
 ### 🔐 **Secure Authentication**
+
 - User registration and login with bcrypt password hashing
 - Session-based authentication with Passport.js
 - Secure session management with Prisma Session Store
 
 ### 📁 **Smart File Management**
+
 - **Nested folder structure** - Create unlimited nested folders
 - **Drag & drop uploads** - Modern, intuitive file uploading
 - **Multiple file upload** - Upload multiple files simultaneously
@@ -34,12 +36,14 @@
 - **Search functionality** - Find files and folders quickly
 
 ### ☁️ **Cloud Storage Integration**
+
 - **Cloudinary integration** - Reliable cloud storage
 - **Automatic backups** - Files stored securely in the cloud
 - **Migration support** - Seamless migration from local to cloud storage
 - **CDN delivery** - Fast file access worldwide
 
 ### 🔗 **Advanced Sharing System**
+
 - **Secure share links** - Generate time-limited sharing links
 - **Flexible expiration** - Set custom expiration times (minutes, hours, days)
 - **Public access** - No account required for file access
@@ -47,12 +51,14 @@
 - **Access tracking** - Monitor when your files are accessed
 
 ### 🎨 **Modern User Interface**
+
 - **Responsive design** - Works on all devices
 - **Dark/Light themes** - Beautiful, accessible design
 - **Real-time feedback** - Instant notifications and progress indicators
 - **Intuitive navigation** - Easy-to-use dashboard interface
 
 ### ⚡ **Performance & Reliability**
+
 - **Health monitoring** - Built-in health checks
 - **Error handling** - Comprehensive error management
 - **Background processing** - Non-blocking operations
@@ -62,10 +68,12 @@
 
 ## 🚀 Live Demo
 
-**🌐 Visit the live application:** [drop-zone.onrender.app](https://drop-zone.onrender.app)
+**🌐 Visit the live application:** [drop-zone.onrender.com](https://drop-zone.onrender.com)
 
 ### Test Credentials
+
 Create your own account or use the platform to experience:
+
 - ✅ User registration and authentication
 - ✅ File upload and organization
 - ✅ Folder creation and management
@@ -77,11 +85,13 @@ Create your own account or use the platform to experience:
 ## ⚡ Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ and npm
 - PostgreSQL database
 - Cloudinary account
 
 ### 1. Clone & Install
+
 ```bash
 git clone https://github.com/txbish/drop-zone.git
 cd drop-zone
@@ -89,7 +99,9 @@ npm install
 ```
 
 ### 2. Environment Setup
+
 Create `.env` file:
+
 ```env
 # Database
 DATABASE_URL="postgresql://username:password@localhost:5432/dropzone"
@@ -108,6 +120,7 @@ PORT=3000
 ```
 
 ### 3. Database Setup
+
 ```bash
 # Generate Prisma client
 npm run generate
@@ -120,6 +133,7 @@ npx prisma db seed
 ```
 
 ### 4. Development
+
 ```bash
 # Start development server
 npm run dev
@@ -130,7 +144,9 @@ npm start
 ```
 
 ### 5. Migration (Optional)
+
 If migrating from local storage:
+
 ```bash
 npm run migrate-to-cloudinary
 ```
@@ -140,6 +156,7 @@ npm run migrate-to-cloudinary
 ## 🏗️ Architecture
 
 ### Project Structure
+
 ```
 📦 DropZone
 ├── 🎯 src/
@@ -156,6 +173,7 @@ npm run migrate-to-cloudinary
 ```
 
 ### Database Schema
+
 ```mermaid
 erDiagram
     User ||--o{ File : owns
@@ -164,7 +182,7 @@ erDiagram
     Folder ||--o{ File : contains
     Folder ||--o{ Folder : "nested in"
     Folder ||--o{ FolderShare : "shared via"
-    
+
     User {
         string id PK
         string username UK
@@ -172,7 +190,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     Folder {
         string id PK
         string name
@@ -181,7 +199,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     File {
         string id PK
         string originalName
@@ -195,7 +213,7 @@ erDiagram
         datetime createdAt
         datetime updatedAt
     }
-    
+
     FolderShare {
         string id PK
         string shareToken UK
@@ -212,6 +230,7 @@ erDiagram
 ## 📚 API Documentation
 
 ### Authentication Endpoints
+
 ```http
 POST   /signup              # Create new account
 POST   /login               # User authentication
@@ -219,6 +238,7 @@ GET    /logout              # End session
 ```
 
 ### File Management
+
 ```http
 GET    /dashboard           # Main dashboard view
 GET    /dashboard/data      # Get folders and files
@@ -228,6 +248,7 @@ GET    /files/download/:id  # Download file
 ```
 
 ### Folder Operations
+
 ```http
 POST   /folders             # Create new folder
 PUT    /folders/:id         # Rename folder
@@ -236,6 +257,7 @@ GET    /folders/:id/tree    # Get folder structure
 ```
 
 ### Sharing System
+
 ```http
 POST   /share/create        # Create share link
 GET    /share/my-shares     # Get user's shares
@@ -245,6 +267,7 @@ GET    /share/:token         # Access shared folder
 ```
 
 ### Utilities
+
 ```http
 GET    /health              # Health check
 GET    /dashboard/search    # Search files/folders
@@ -255,6 +278,7 @@ GET    /dashboard/search    # Search files/folders
 ## 🛠️ Tech Stack
 
 ### **Backend**
+
 - **Node.js** - Runtime environment
 - **TypeScript** - Type-safe JavaScript
 - **Express.js** - Web framework
@@ -263,23 +287,27 @@ GET    /dashboard/search    # Search files/folders
 - **PostgreSQL** - Primary database
 
 ### **File Storage**
+
 - **Cloudinary** - Cloud storage & CDN
 - **Multer** - File upload handling
 - **multer-storage-cloudinary** - Cloudinary integration
 
 ### **Frontend**
+
 - **EJS** - Server-side templating
 - **Vanilla JavaScript** - Client-side interactions
 - **CSS3** - Modern styling with grid/flexbox
 - **Font Awesome** - Icon library
 
 ### **Security & Validation**
+
 - **bcrypt** - Password hashing
 - **express-validator** - Input validation
 - **express-session** - Session management
 - **UUID** - Unique identifier generation
 
 ### **Development & Deployment**
+
 - **ts-node-dev** - Development server
 - **Morgan** - HTTP request logging
 - **Render** - Cloud deployment platform
@@ -289,6 +317,7 @@ GET    /dashboard/search    # Search files/folders
 ## 🚀 Deployment
 
 ### Render Deployment
+
 The application is configured for easy Render deployment:
 
 1. **Automatic Builds** - Configured with `render.yaml`
@@ -297,6 +326,7 @@ The application is configured for easy Render deployment:
 4. **Auto-scaling** - Handles traffic spikes
 
 ### Manual Deployment
+
 ```bash
 # Build the application
 npm run build
@@ -310,18 +340,21 @@ npm start
 ## 🔧 Configuration
 
 ### Environment Variables
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | ✅ |
-| `SESSION_SECRET` | Session encryption key | ✅ |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name | ✅ |
-| `CLOUDINARY_API_KEY` | Cloudinary API key | ✅ |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret | ✅ |
-| `NODE_ENV` | Environment (development/production) | ❌ |
-| `PORT` | Server port (default: 3000) | ❌ |
+
+| Variable                | Description                          | Required |
+| ----------------------- | ------------------------------------ | -------- |
+| `DATABASE_URL`          | PostgreSQL connection string         | ✅       |
+| `SESSION_SECRET`        | Session encryption key               | ✅       |
+| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name                | ✅       |
+| `CLOUDINARY_API_KEY`    | Cloudinary API key                   | ✅       |
+| `CLOUDINARY_API_SECRET` | Cloudinary API secret                | ✅       |
+| `NODE_ENV`              | Environment (development/production) | ❌       |
+| `PORT`                  | Server port (default: 3000)          | ❌       |
 
 ### Database Configuration
+
 The application uses PostgreSQL with Prisma ORM:
+
 - **Connection pooling** for performance
 - **Migration system** for schema updates
 - **Type-safe** database queries
@@ -331,6 +364,7 @@ The application uses PostgreSQL with Prisma ORM:
 ## 📊 Features Deep Dive
 
 ### 🔐 Security Features
+
 - **Password Security**: bcrypt with salt rounds
 - **Session Security**: Secure session cookies
 - **Input Validation**: Comprehensive request validation
@@ -338,12 +372,14 @@ The application uses PostgreSQL with Prisma ORM:
 - **Share Security**: Time-limited access tokens
 
 ### 📁 File Management
+
 - **Nested Folders**: Unlimited folder depth
 - **Bulk Operations**: Select and manage multiple items
 - **Smart Search**: Find files across all folders
 - **File Metadata**: Track size, type, and creation dates
 
 ### 🔗 Sharing System
+
 - **Flexible Expiration**: Minutes to days
 - **Public Access**: No registration required
 - **Share Analytics**: Track access and usage
@@ -362,6 +398,7 @@ We welcome contributions! Here's how to get started:
 5. **Open a Pull Request**
 
 ### Development Guidelines
+
 - Follow TypeScript best practices
 - Add tests for new features
 - Update documentation
@@ -381,7 +418,7 @@ This project is licensed under the ISC License - see the [LICENSE](LICENSE) file
 
 - GitHub: [@txbish](https://github.com/txbish)
 - Project: [drop-zone](https://github.com/txbish/drop-zone)
-- Live Demo: [drop-zone.onrender.app](https://drop-zone.onrender.app)
+- Live Demo: [drop-zone.onrender.com](https://drop-zone.onrender.com)
 
 ---
 
