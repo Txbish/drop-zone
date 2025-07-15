@@ -124,6 +124,11 @@ class Dashboard {
       this.showModal("upload-file-modal");
     });
 
+    // Manage shares direct button
+    document.getElementById("manage-shares-direct-btn").addEventListener("click", () => {
+      this.openManageSharesModal();
+    });
+
     // View controls
     document.querySelectorAll(".view-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => this.handleViewChange(e));
@@ -1195,6 +1200,7 @@ class Dashboard {
     const createSection = document.getElementById("create-share-section");
     const createdSection = document.getElementById("share-created-section");
     const sharesSection = document.getElementById("my-shares-section");
+    const existingSection = document.getElementById("existing-share-section");
 
     // Store folder info in modal
     modal.dataset.folderId = folderId;
@@ -1207,6 +1213,9 @@ class Dashboard {
     createSection.style.display = "block";
     createdSection.style.display = "none";
     sharesSection.style.display = "none";
+    if (existingSection) {
+      existingSection.style.display = "none";
+    }
 
     // Reset form
     document.getElementById("share-form").reset();
@@ -1230,6 +1239,17 @@ class Dashboard {
       const result = await response.json();
 
       if (!response.ok) {
+        // Special handling for "already has share" error
+        if (response.status === 400 && result.shareToken) {
+          const error = new Error(result.error || "Failed to create share");
+          error.shareData = {
+            shareToken: result.shareToken,
+            shareUrl: `${window.location.origin}/share/${result.shareToken}`,
+            expiresAt: result.expiresAt,
+            createdAt: new Date().toISOString() // Fallback
+          };
+          throw error;
+        }
         throw new Error(result.error || "Failed to create share");
       }
 
@@ -1424,10 +1444,14 @@ class Dashboard {
     const createSection = document.getElementById("create-share-section");
     const createdSection = document.getElementById("share-created-section");
     const sharesSection = document.getElementById("my-shares-section");
+    const existingSection = document.getElementById("existing-share-section");
 
     createSection.style.display = "none";
     createdSection.style.display = "none";
     sharesSection.style.display = "block";
+    if (existingSection) {
+      existingSection.style.display = "none";
+    }
 
     this.loadUserShares();
   }
@@ -1436,11 +1460,158 @@ class Dashboard {
     const createSection = document.getElementById("create-share-section");
     const createdSection = document.getElementById("share-created-section");
     const sharesSection = document.getElementById("my-shares-section");
+    const existingSection = document.getElementById("existing-share-section");
 
     createSection.style.display = "block";
     createdSection.style.display = "none";
     sharesSection.style.display = "none";
+    if (existingSection) {
+      existingSection.style.display = "none";
+    }
   }
+
+  async openManageSharesModal() {
+    const modal = document.getElementById("share-modal");
+    const folderNameSpan = document.getElementById("share-folder-name");
+    const createSection = document.getElementById("create-share-section");
+    const createdSection = document.getElementById("share-created-section");
+    const sharesSection = document.getElementById("my-shares-section");
+    const existingSection = document.getElementById("existing-share-section");
+
+    // Clear folder-specific data since this is a general view
+    modal.dataset.folderId = "";
+    modal.dataset.folderName = "";
+
+    // Update modal title for general management
+    folderNameSpan.textContent = "All Folders";
+
+    // Show manage shares section directly
+    createSection.style.display = "none";
+    createdSection.style.display = "none";
+    sharesSection.style.display = "block";
+    if (existingSection) {
+      existingSection.style.display = "none";
+    }
+
+    this.showModal("share-modal");
+    this.loadUserShares();
+  }
+
+  showExistingShare(shareData) {
+    const createSection = document.getElementById("create-share-section");
+    const createdSection = document.getElementById("share-created-section");
+    const existingSection = document.getElementById("existing-share-section");
+
+    // Hide create form and show existing share info
+    createSection.style.display = "none";
+    createdSection.style.display = "none";
+    
+    // Create existing share section if it doesn't exist
+    if (!existingSection) {
+      this.createExistingShareSection();
+    }
+    
+    // Show and populate existing share section
+    const section = document.getElementById("existing-share-section");
+    section.style.display = "block";
+    
+    const shareLinkInput = section.querySelector(".existing-share-link");
+    const expiresSpan = section.querySelector(".existing-share-expires");
+    
+    shareLinkInput.value = shareData.shareUrl;
+    expiresSpan.textContent = new Date(shareData.expiresAt).toLocaleString();
+  }
+
+  createExistingShareSection() {
+    const modalBody = document.querySelector(".share-modal-body");
+    
+    const existingSection = document.createElement("div");
+    existingSection.id = "existing-share-section";
+    existingSection.className = "share-section";
+    existingSection.style.display = "none";
+    
+    existingSection.innerHTML = `
+      <div class="share-warning-new">
+        <div class="warning-icon-wrapper">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="warning-content">
+          <h4>⚠️ Share Already Exists!</h4>
+          <p>This folder already has an active share link. You can use the existing link below or manage your shares.</p>
+        </div>
+      </div>
+
+      <div class="share-link-container-new existing-share-container">
+        <label>
+          <i class="fas fa-link"></i> Existing Share Link
+        </label>
+        <div class="share-link-wrapper">
+          <div class="share-link-display">
+            <input type="text" class="existing-share-link share-link-input-new" readonly />
+            <button type="button" class="copy-btn" onclick="dashboard.copyExistingShareLink()" title="Copy to clipboard">
+              <i class="fas fa-copy"></i>
+            </button>
+          </div>
+          <div class="link-actions">
+            <button type="button" class="action-btn" onclick="window.open(document.querySelector('.existing-share-link').value)">
+              <i class="fas fa-external-link-alt"></i> Preview
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="share-stats">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Expires</span>
+            <span class="stat-value existing-share-expires">-</span>
+          </div>
+        </div>
+        <div class="stat-card warning-stat">
+          <div class="stat-icon">
+            <i class="fas fa-exclamation-circle"></i>
+          </div>
+          <div class="stat-info">
+            <span class="stat-label">Status</span>
+            <span class="stat-value">Already Active</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-modal="share-modal">
+          <i class="fas fa-times"></i> Close
+        </button>
+        <button type="button" class="btn btn-outline" onclick="dashboard.showCreateShare()">
+          <i class="fas fa-plus"></i> Create New
+        </button>
+        <button type="button" class="btn btn-primary" onclick="dashboard.showManageShares()">
+          <i class="fas fa-cog"></i> Manage Shares
+        </button>
+      </div>
+    `;
+    
+    modalBody.appendChild(existingSection);
+  }
+
+  async copyExistingShareLink() {
+    const shareLinkInput = document.querySelector(".existing-share-link");
+    try {
+      await navigator.clipboard.writeText(shareLinkInput.value);
+      this.showMessage("success", "Share link copied to clipboard!");
+    } catch (error) {
+      // Fallback for older browsers
+      shareLinkInput.select();
+      shareLinkInput.setSelectionRange(0, 99999);
+      document.execCommand("copy");
+      this.showMessage("success", "Share link copied to clipboard!");
+    }
+  }
+
+  // ...existing code...
 }
 
 // Initialize dashboard when DOM is loaded
