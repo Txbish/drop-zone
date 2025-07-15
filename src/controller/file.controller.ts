@@ -2,7 +2,7 @@ import { Request, RequestHandler, Response, NextFunction } from 'express';
 import prisma from '../database/prismaClient';
 import { body, Result, ValidationError, validationResult } from "express-validator";
 import { cloudinary } from '../config/cloudinaryConfig';
-import { Prisma } from '../generated/prisma';
+import { Prisma } from '@prisma/client';
 
 export const uploadFile: RequestHandler = async (req, res, next) => {
   try {
