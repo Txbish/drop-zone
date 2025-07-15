@@ -53,11 +53,16 @@ router.post('/upload',
   upload.single('file'),
   [
     body('folderId')
-      .optional()
+      .optional({ checkFalsy: true }) // This will treat empty strings as undefined
       .isUUID()
       .withMessage('Folder ID must be a valid UUID'),
     body('isPublic')
       .optional()
+      .customSanitizer((value) => {
+        if (value === 'true') return true;
+        if (value === 'false') return false;
+        return value;
+      })
       .isBoolean()
       .withMessage('isPublic must be a boolean value')
   ],
@@ -88,11 +93,16 @@ router.put('/:id', [
     .isLength({ min: 1, max: 255 })
     .withMessage('Original name must be between 1 and 255 characters'),
   body('folderId')
-    .optional()
+    .optional({ checkFalsy: true })
     .isUUID()
     .withMessage('Folder ID must be a valid UUID'),
   body('isPublic')
     .optional()
+    .customSanitizer((value) => {
+      if (value === 'true') return true;
+      if (value === 'false') return false;
+      return value;
+    })
     .isBoolean()
     .withMessage('isPublic must be a boolean value')
 ], updateFile);

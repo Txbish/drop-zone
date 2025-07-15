@@ -106,31 +106,93 @@ export const updateFolder: RequestHandler = async (req, res, next) => {
     }
 
     const userId = req.user?.id;
-    const { name } = req.body;
-    const folderId = req.params.id;
+    const { name, parentId, folderId } = req.body;
+    const folderIdParam = req.params.id;
 
     if (!userId) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
-    const updatedFolder = await prisma.folder.updateMany({
-      where: {
-        id: folderId,
-        userId: userId,
-      },
-      data: {
-        name: name,
-      },
+
+    // Get the folder to check ownership
+    const existingFolder = await prisma.folder.findUnique({
+      where: { id: folderIdParam }
     });
 
-    if (updatedFolder.count === 0) {
+    if (!existingFolder || existingFolder.userId !== userId) {
       return res.status(404).json({ error: 'Folder not found or access denied' });
     }
 
-    return res.status(200).json({ message: 'Folder updated successfully' });
+    // If parentId is provided (for moving), verify it exists and belongs to the user
+    // Also prevent moving a folder into itself or its descendants
+    if (parentId !== undefined) {
+      if (parentId !== null) {
+        const parentFolder = await prisma.folder.findUnique({
+          where: { id: parentId }
+        });
+
+        if (!parentFolder || parentFolder.userId !== userId) {
+          return res.status(404).json({ error: 'Destination folder not found or access denied' });
+        }
+
+        // Prevent moving folder into itself
+        if (parentId === folderIdParam) {
+          return res.status(400).json({ error: 'Cannot move folder into itself' });
+        }
+
+        // Check if trying to move into a descendant (which would create a cycle)
+        const isDescendant = await checkIfDescendant(folderIdParam, parentId);
+        if (isDescendant) {
+          return res.status(400).json({ error: 'Cannot move folder into its own descendant' });
+        }
+      }
+    }
+
+    // Prepare update data
+    const updateData: any = {};
+    if (name !== undefined) {
+      updateData.name = name;
+    }
+    if (parentId !== undefined) {
+      updateData.parentId = parentId;
+    }
+
+    const updatedFolder = await prisma.folder.update({
+      where: {
+        id: folderIdParam,
+      },
+      data: updateData,
+    });
+
+    return res.status(200).json({ 
+      message: 'Folder updated successfully',
+      folder: updatedFolder
+    });
   } catch (error) {
     next(error);
   }
 };
+
+// Helper function to check if targetId is a descendant of ancestorId
+async function checkIfDescendant(ancestorId: string, targetId: string): Promise<boolean> {
+  const descendants = await prisma.folder.findMany({
+    where: {
+      parentId: ancestorId
+    }
+  });
+
+  for (const descendant of descendants) {
+    if (descendant.id === targetId) {
+      return true;
+    }
+    // Recursively check descendants
+    const isNestedDescendant = await checkIfDescendant(descendant.id, targetId);
+    if (isNestedDescendant) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 
 export const deleteFolder: RequestHandler = async (req: Request, res: Response, next: NextFunction) => { 

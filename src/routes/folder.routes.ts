@@ -35,7 +35,7 @@ router.post('/', [
     .matches(/^[^<>:"/\\|?*]+$/)
     .withMessage('Folder name contains invalid characters'),
   body('parentId')
-    .optional()
+    .optional({ checkFalsy: true })
     .isUUID()
     .withMessage('Parent ID must be a valid UUID')
 ], createFolder);
@@ -46,13 +46,22 @@ router.put('/:id', [
     .isUUID()
     .withMessage('Folder ID must be a valid UUID'),
   body('name')
+    .optional()
     .trim()
     .notEmpty()
     .withMessage('Folder name cannot be empty')
     .isLength({ min: 1, max: 255 })
     .withMessage('Folder name must be between 1 and 255 characters')
     .matches(/^[^<>:"/\\|?*]+$/)
-    .withMessage('Folder name contains invalid characters')
+    .withMessage('Folder name contains invalid characters'),
+  body('parentId')
+    .optional({ checkFalsy: true })
+    .isUUID()
+    .withMessage('Parent ID must be a valid UUID'),
+  body('folderId')
+    .optional({ checkFalsy: true })
+    .isUUID()
+    .withMessage('Folder ID must be a valid UUID')
 ], updateFolder);
 
 // DELETE /:id - Delete folder

@@ -808,73 +808,68 @@ body {
   margin: 1rem 0;
 }
 
-.progress-bar {
-  background-color: var(--accent-color);
+/* Move Modal Styles */
+.folder-tree-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
-  height: 8px;
-  overflow: hidden;
+  padding: 0.5rem;
+  background-color: var(--background-alt);
 }
 
-.progress-fill {
-  height: 100%;
-  background-color: var(--highlight-color);
-  width: 0%;
-  transition: width 0.3s ease;
-}
-
-.progress-text {
-  font-size: 0.9rem;
-  color: var(--text-color);
-  margin-left: 0.5rem;
-}
-
-/* Context Menu */
-.context-menu {
-  position: absolute;
-  background-color: var(--primary-color);
-  border: 1px solid var(--accent-color);
-  border-radius: var(--border-radius);
-  padding: 0.5rem 0;
-  min-width: 150px;
-  z-index: 1001;
-  display: none;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-}
-
-.context-item {
-  padding: 0.5rem 1rem;
+.folder-tree-container .tree-item {
+  padding: 0.5rem;
   cursor: pointer;
-  color: var(--text-color);
+  border-radius: var(--border-radius);
+  margin: 2px 0;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
   transition: background-color var(--transition-speed);
 }
 
-.context-item:hover {
+.folder-tree-container .tree-item:hover {
+  background-color: var(--background-hover);
+}
+
+.folder-tree-container .tree-item.selected {
   background-color: var(--accent-color);
+  color: white;
 }
 
-.context-item.context-danger:hover {
-  background-color: var(--highlight-color);
+.folder-tree-container .tree-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: transparent !important;
 }
 
-.context-divider {
-  height: 1px;
-  background-color: var(--accent-color);
-  margin: 0.5rem 0;
+.folder-tree-container .tree-item i {
+  margin-right: 0.5rem;
+  color: var(--accent-color);
+  width: 16px;
 }
 
-/* Loading States */
-.loading {
-  text-align: center;
-  padding: 2rem;
+.folder-tree-container .tree-item.selected i {
+  color: white;
+}
+
+.current-location {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--background-alt);
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--accent-color);
+}
+
+.current-location small {
   color: var(--subtle-text);
 }
 
-.loading i {
-  font-size: 1.5rem;
-  margin-right: 0.5rem;
+/* Loading state for move tree */
+.move-tree-loading {
+  text-align: center;
+  padding: 1rem;
+  color: var(--subtle-text);
 }
 
 /* Button Sizes */

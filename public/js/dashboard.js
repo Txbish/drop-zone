@@ -9,6 +9,99 @@ class Dashboard {
     this.init();
   }
 
+  // Debounce utility function
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func.apply(this, args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
+  // Show message utility function
+  showMessage(type, message) {
+    // Try to find an existing message container
+    let messageContainer = document.getElementById("message-container");
+
+    // If no container exists, create one
+    if (!messageContainer) {
+      messageContainer = document.createElement("div");
+      messageContainer.id = "message-container";
+      messageContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        max-width: 400px;
+      `;
+      document.body.appendChild(messageContainer);
+    }
+
+    // Create message element
+    const messageEl = document.createElement("div");
+    messageEl.className = `message message-${type}`;
+    messageEl.style.cssText = `
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      color: white;
+      font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      opacity: 0;
+      transform: translateX(100%);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    `;
+
+    // Set background color based on type
+    switch (type) {
+      case "success":
+        messageEl.style.backgroundColor = "#28a745";
+        break;
+      case "error":
+        messageEl.style.backgroundColor = "#dc3545";
+        break;
+      case "warning":
+        messageEl.style.backgroundColor = "#ffc107";
+        messageEl.style.color = "#212529";
+        break;
+      case "info":
+        messageEl.style.backgroundColor = "#17a2b8";
+        break;
+      default:
+        messageEl.style.backgroundColor = "#6c757d";
+    }
+
+    messageEl.textContent = message;
+
+    // Add to container
+    messageContainer.appendChild(messageEl);
+
+    // Animate in
+    setTimeout(() => {
+      messageEl.style.opacity = "1";
+      messageEl.style.transform = "translateX(0)";
+    }, 10);
+
+    // Auto remove after 5 seconds or on click
+    const removeMessage = () => {
+      messageEl.style.opacity = "0";
+      messageEl.style.transform = "translateX(100%)";
+      setTimeout(() => {
+        if (messageEl.parentNode) {
+          messageEl.parentNode.removeChild(messageEl);
+        }
+      }, 300);
+    };
+
+    messageEl.addEventListener("click", removeMessage);
+    setTimeout(removeMessage, 5000);
+  }
+
   init() {
     this.bindEvents();
     this.loadFolderTree();
@@ -94,13 +187,29 @@ class Dashboard {
       .addEventListener("submit", (e) => {
         this.handleFileUpload(e);
       });
+
+    // Rename form
+    document.getElementById("rename-form").addEventListener("submit", (e) => {
+      this.handleRename(e);
+    });
+
+    // Move form
+    document.getElementById("move-form").addEventListener("submit", (e) => {
+      this.handleMove(e);
+    });
   }
 
   bindFileDropEvents() {
     const dropZone = document.getElementById("file-drop-zone");
     const fileInput = document.getElementById("file-input");
 
-    dropZone.addEventListener("click", () => fileInput.click());
+    // Handle click on drop zone (but not on the file input itself)
+    dropZone.addEventListener("click", (e) => {
+      // Only trigger file input if we didn't click directly on the input
+      if (e.target !== fileInput) {
+        fileInput.click();
+      }
+    });
 
     dropZone.addEventListener("dragover", (e) => {
       e.preventDefault();
@@ -121,14 +230,26 @@ class Dashboard {
     fileInput.addEventListener("change", (e) => {
       this.updateFileDropDisplay(e.target.files);
     });
+
+    // Prevent the file input from triggering the drop zone click
+    fileInput.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
   }
 
   updateFileDropDisplay(files) {
     const dropZone = document.getElementById("file-drop-zone");
-    if (files.length > 0) {
-      dropZone.querySelector(
-        "p"
-      ).textContent = `${files.length} file(s) selected`;
+    const fileCount = files ? files.length : 0;
+
+    if (fileCount > 0) {
+      const fileName = files[0].name;
+      dropZone.querySelector("p").textContent =
+        fileCount === 1
+          ? `Selected: ${fileName}`
+          : `${fileCount} files selected`;
+    } else {
+      dropZone.querySelector("p").textContent =
+        "Drag and drop a file here or click to browse";
     }
   }
 
@@ -240,17 +361,23 @@ class Dashboard {
       ? '<span class="public-badge">Public</span>'
       : "";
 
+    // Use originalName for files, name for folders
+    const itemName =
+      item.type === "file" ? item.originalName || item.name : item.name;
+
     return `
       <div class="item" data-id="${item.id}" data-type="${item.type}">
         <div class="item-icon">
           <i class="${item.icon}"></i>
         </div>
         <div class="item-info">
-          <div class="item-name">${item.name}</div>
+          <div class="item-name">${itemName}</div>
           <div class="item-meta">
             ${sizeDisplay}
             ${publicBadge}
-            <span class="item-date">${this.formatDate(item.updatedAt)}</span>
+            <span class="item-date">${this.formatDate(
+              item.updatedAt || item.createdAt
+            )}</span>
           </div>
         </div>
         <div class="item-actions">
@@ -394,6 +521,11 @@ class Dashboard {
 
     menu.dataset.itemId = item.dataset.id;
     menu.dataset.itemType = item.dataset.type;
+
+    // Store the item name for rename functionality
+    const itemNameEl = item.querySelector(".item-name");
+    const itemName = itemNameEl ? itemNameEl.textContent.trim() : "";
+    menu.dataset.itemName = itemName;
   }
 
   hideContextMenu() {
@@ -410,12 +542,18 @@ class Dashboard {
   async handleNewFolder(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-    formData.append("parentId", this.currentFolderId || "");
+    const folderData = {
+      name: formData.get("name"),
+      parentId: this.currentFolderId || null,
+    };
 
     try {
       const response = await fetch("/folders", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(folderData),
       });
 
       if (!response.ok) {
@@ -436,7 +574,20 @@ class Dashboard {
   async handleFileUpload(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-    formData.append("folderId", this.currentFolderId || "");
+
+    // Only append folderId if we have a current folder
+    if (this.currentFolderId) {
+      formData.append("folderId", this.currentFolderId);
+    }
+
+    // Handle isPublic checkbox - convert to proper boolean
+    const isPublicCheckbox = e.target.querySelector('#make-public');
+    if (isPublicCheckbox) {
+      // Remove the original isPublic value that might be "on" string
+      formData.delete("isPublic");
+      // Add proper boolean value
+      formData.append("isPublic", isPublicCheckbox.checked ? "true" : "false");
+    }
 
     const progressBar = document.getElementById("upload-progress");
     const progressFill = document.getElementById("progress-fill");
@@ -463,6 +614,88 @@ class Dashboard {
     } catch (error) {
       this.showMessage("error", error.message);
       progressBar.style.display = "none";
+    }
+  }
+
+  async handleRename(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const newName = formData.get("name");
+
+    // Get item details from the form's data attributes
+    const form = e.target;
+    const itemId = form.dataset.itemId;
+    const itemType = form.dataset.itemType;
+
+    try {
+      const endpoint =
+        itemType === "folder" ? `/folders/${itemId}` : `/files/${itemId}`;
+      const body =
+        itemType === "folder" ? { name: newName } : { originalName: newName };
+
+      const response = await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || `Failed to rename ${itemType}`);
+      }
+
+      this.hideModal("rename-modal");
+      this.loadContent();
+      this.loadFolderTree();
+      this.showMessage("success", `${itemType} renamed successfully`);
+      e.target.reset();
+    } catch (error) {
+      this.showMessage("error", error.message);
+    }
+  }
+
+  async handleMove(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const destinationFolderId = formData.get("destinationFolderId") || null;
+
+    // Get item details from the form's data attributes
+    const form = e.target;
+    const itemId = form.dataset.itemId;
+    const itemType = form.dataset.itemType;
+
+    try {
+      const endpoint =
+        itemType === "folder" ? `/folders/${itemId}` : `/files/${itemId}`;
+
+      // For folders, use parentId. For files, use folderId
+      const body =
+        itemType === "folder"
+          ? { parentId: destinationFolderId }
+          : { folderId: destinationFolderId };
+
+      const response = await fetch(endpoint, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || `Failed to move ${itemType}`);
+      }
+
+      this.hideModal("move-modal");
+      this.loadContent();
+      this.loadFolderTree();
+      this.showMessage("success", `${itemType} moved successfully`);
+      e.target.reset();
+    } catch (error) {
+      this.showMessage("error", error.message);
     }
   }
 
@@ -594,80 +827,271 @@ class Dashboard {
     document.getElementById(modalId).classList.remove("active");
   }
 
-  showMessage(type, message) {
-    // Create and show flash message
-    const container =
-      document.querySelector(".messages-container") ||
-      document.querySelector(".container");
+  showRenameModal(itemId, itemType, currentName) {
+    const modal = document.getElementById("rename-modal");
+    const form = document.getElementById("rename-form");
+    const nameInput = document.getElementById("new-name");
+    const typeSpan = document.getElementById("rename-item-type");
 
-    const messageEl = document.createElement("div");
-    messageEl.className = `message message-${type}`;
-    messageEl.innerHTML = `
-      <i class="fas fa-${this.getMessageIcon(type)}"></i>
-      ${message}
-    `;
+    // Set form data attributes
+    form.dataset.itemId = itemId;
+    form.dataset.itemType = itemType;
 
-    container.insertBefore(messageEl, container.firstChild);
+    // Set current name as default value
+    nameInput.value = currentName;
 
-    // Auto-remove after 5 seconds
+    // Update modal title
+    typeSpan.textContent = itemType.charAt(0).toUpperCase() + itemType.slice(1);
+
+    this.showModal("rename-modal");
+
+    // Focus and select the name input
     setTimeout(() => {
-      messageEl.remove();
-    }, 5000);
+      nameInput.focus();
+      nameInput.select();
+    }, 100);
   }
 
-  getMessageIcon(type) {
-    const icons = {
-      success: "check-circle",
-      error: "exclamation-circle",
-      warning: "exclamation-triangle",
-      info: "info-circle",
-    };
-    return icons[type] || "info-circle";
+  async showMoveModal(itemId, itemType, itemName) {
+    const modal = document.getElementById("move-modal");
+    const form = document.getElementById("move-form");
+    const itemNameSpan = document.getElementById("move-item-name");
+    const currentLocationSpan = document.getElementById(
+      "move-current-location"
+    );
+    const submitButton = document.getElementById("move-submit-btn");
+
+    // Set form data attributes
+    form.dataset.itemId = itemId;
+    form.dataset.itemType = itemType;
+
+    // Update modal title and current location
+    itemNameSpan.textContent = itemName;
+    currentLocationSpan.textContent = this.getCurrentLocationText();
+
+    // Reset selection
+    document.getElementById("selected-destination").value = "";
+    submitButton.disabled = true;
+
+    this.showModal("move-modal");
+
+    // Load folder tree for selection
+    await this.loadMoveFolderTree(itemId, itemType);
   }
 
-  getFileIcon(mimeType) {
-    if (mimeType.startsWith("image/")) return "fas fa-image";
-    if (mimeType.startsWith("video/")) return "fas fa-video";
-    if (mimeType.startsWith("audio/")) return "fas fa-music";
-    if (mimeType.includes("pdf")) return "fas fa-file-pdf";
-    if (mimeType.includes("word") || mimeType.includes("document"))
-      return "fas fa-file-word";
-    if (mimeType.includes("excel") || mimeType.includes("spreadsheet"))
-      return "fas fa-file-excel";
-    if (mimeType.includes("powerpoint") || mimeType.includes("presentation"))
-      return "fas fa-file-powerpoint";
-    if (mimeType.includes("zip") || mimeType.includes("archive"))
-      return "fas fa-file-archive";
-    return "fas fa-file";
+  getCurrentLocationText() {
+    if (!this.currentFolderId) {
+      return "Root Folder";
+    }
+
+    // Try to get current folder name from breadcrumb or folder tree
+    const breadcrumbItems = document.querySelectorAll(".breadcrumb-item");
+    if (breadcrumbItems.length > 0) {
+      const lastItem = breadcrumbItems[breadcrumbItems.length - 1];
+      return lastItem.textContent.trim();
+    }
+
+    return "Current Folder";
   }
 
+  async loadMoveFolderTree(excludeItemId, excludeItemType) {
+    const treeContainer = document.getElementById("move-folder-tree");
+    const loadingEl = document.getElementById("move-tree-loading");
+
+    try {
+      loadingEl.style.display = "block";
+
+      const response = await fetch("/dashboard/tree");
+      if (!response.ok) throw new Error("Failed to load folder tree");
+
+      const folders = await response.json();
+
+      loadingEl.style.display = "none";
+
+      // Clear existing tree (except root folder)
+      const existingItems = treeContainer.querySelectorAll(
+        ".tree-item:not(.root-folder)"
+      );
+      existingItems.forEach((item) => item.remove());
+
+      // Render folder tree
+      this.renderMoveTree(
+        folders,
+        treeContainer,
+        excludeItemId,
+        excludeItemType
+      );
+
+      // Bind click events
+      this.bindMoveTreeEvents();
+    } catch (error) {
+      loadingEl.style.display = "none";
+      this.showMessage("error", "Failed to load folders");
+    }
+  }
+
+  renderMoveTree(
+    folders,
+    container,
+    excludeItemId,
+    excludeItemType,
+    level = 1
+  ) {
+    folders.forEach((folder) => {
+      // Skip the folder we're trying to move (can't move into itself)
+      if (excludeItemType === "folder" && folder.id === excludeItemId) {
+        return;
+      }
+
+      const folderEl = document.createElement("div");
+      folderEl.className = "tree-item";
+      folderEl.style.paddingLeft = `${level * 20}px`;
+      folderEl.dataset.folderId = folder.id;
+      folderEl.innerHTML = `
+        <i class="fas fa-folder"></i>
+        <span>${folder.name}</span>
+      `;
+
+      container.appendChild(folderEl);
+
+      // Recursively render children
+      if (folder.children && folder.children.length > 0) {
+        this.renderMoveTree(
+          folder.children,
+          container,
+          excludeItemId,
+          excludeItemType,
+          level + 1
+        );
+      }
+    });
+  }
+
+  bindMoveTreeEvents() {
+    const treeContainer = document.getElementById("move-folder-tree");
+    const selectedDestinationInput = document.getElementById(
+      "selected-destination"
+    );
+    const submitButton = document.getElementById("move-submit-btn");
+
+    treeContainer.querySelectorAll(".tree-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        // Remove previous selection
+        treeContainer.querySelectorAll(".tree-item").forEach((el) => {
+          el.classList.remove("selected");
+        });
+
+        // Add selection to clicked item
+        item.classList.add("selected");
+
+        // Update hidden input and enable submit button
+        const folderId = item.dataset.folderId || "";
+        selectedDestinationInput.value = folderId;
+        submitButton.disabled = false;
+
+        // Update submit button text
+        const folderName = item.querySelector("span").textContent;
+        submitButton.textContent = folderId
+          ? `Move to "${folderName}"`
+          : "Move to Root";
+      });
+    });
+  }
+
+  // Utility function to format file size
   formatFileSize(bytes) {
     if (bytes === 0) return "0 Bytes";
+
     const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   }
 
+  // Utility function to format date
   formatDate(dateString) {
     const date = new Date(dateString);
-    return (
-      date.toLocaleDateString() +
-      " " +
-      date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    );
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 1) {
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } else if (diffDays < 7) {
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
   }
 
-  debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
+  // Utility function to get file icon based on mime type
+  getFileIcon(mimeType) {
+    if (!mimeType) return "fas fa-file";
+
+    // Image files
+    if (mimeType.startsWith("image/")) {
+      return "fas fa-file-image";
+    }
+
+    // Video files
+    if (mimeType.startsWith("video/")) {
+      return "fas fa-file-video";
+    }
+
+    // Audio files
+    if (mimeType.startsWith("audio/")) {
+      return "fas fa-file-audio";
+    }
+
+    // Document types
+    if (mimeType.includes("pdf")) {
+      return "fas fa-file-pdf";
+    }
+
+    if (mimeType.includes("word") || mimeType.includes("document")) {
+      return "fas fa-file-word";
+    }
+
+    if (mimeType.includes("sheet") || mimeType.includes("excel")) {
+      return "fas fa-file-excel";
+    }
+
+    if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) {
+      return "fas fa-file-powerpoint";
+    }
+
+    // Archive files
+    if (
+      mimeType.includes("zip") ||
+      mimeType.includes("rar") ||
+      mimeType.includes("archive")
+    ) {
+      return "fas fa-file-archive";
+    }
+
+    // Code files
+    if (
+      mimeType.includes("text/") ||
+      mimeType.includes("json") ||
+      mimeType.includes("javascript") ||
+      mimeType.includes("html") ||
+      mimeType.includes("css")
+    ) {
+      return "fas fa-file-code";
+    }
+
+    // Default file icon
+    return "fas fa-file";
+  }
+
+  // Utility function for copying share links (placeholder)
+  copyShareLink(itemId, itemType) {
+    // This would need to be implemented based on your sharing functionality
+    this.showMessage("info", "Share link feature not implemented yet");
   }
 }
 
@@ -683,21 +1107,36 @@ document.getElementById("close-details").addEventListener("click", () => {
 
 // Context menu actions
 document.getElementById("context-menu").addEventListener("click", (e) => {
-  const action = e.target.dataset.action;
+  const action = e.target.closest(".context-item")?.dataset.action;
+  if (!action) return;
+
   const menu = e.target.closest("#context-menu");
   const itemId = menu.dataset.itemId;
   const itemType = menu.dataset.itemType;
+  const itemName = menu.dataset.itemName;
 
   switch (action) {
     case "download":
       if (itemType === "file") {
         dashboard.downloadFile(itemId);
+      } else {
+        dashboard.showMessage("info", "Only files can be downloaded");
       }
+      break;
+    case "rename":
+      dashboard.showRenameModal(itemId, itemType, itemName);
+      break;
+    case "copy-link":
+      dashboard.copyShareLink(itemId, itemType);
       break;
     case "delete":
       dashboard.deleteItem(itemId, itemType);
       break;
-    // Add more actions as needed
+    case "move":
+      dashboard.showMoveModal(itemId, itemType, itemName);
+      break;
+    default:
+      console.log("Unknown action:", action);
   }
 
   dashboard.hideContextMenu();
