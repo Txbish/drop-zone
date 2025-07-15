@@ -11,7 +11,8 @@ import fileRoutes from "./routes/file.routes";
 import dashboardRoutes from "./routes/dashboard.routes";
 import shareRoutes from "./routes/share.routes";
 import flash from 'express-flash';
-import morgan from "morgan"
+import morgan from "morgan";
+import fetch from 'node-fetch';
 dotenv.config();
 
 const PORT: string | number = process.env.PORT || 3000;
@@ -40,8 +41,57 @@ app.use("/folders", folderRoutes);
 app.use("/files", fileRoutes);
 app.use("/dashboard", dashboardRoutes);
 app.use("/share", shareRoutes);
+
+// Health check and self-ping route
+app.get('/health', (req: Request, res: Response) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage()
+  });
+});
+
 app.get('/', (req: Request, res: Response) => {
   res.render('index');
+});
+
+// Self-pinging functionality to keep Render service awake
+let pingInterval: NodeJS.Timeout;
+
+function startSelfPing() {
+  const url = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+  
+  if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
+    console.log('🚀 Starting self-ping service to keep app awake...');
+    
+    pingInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`${url}/health`);
+        const data = await response.json();
+        console.log(`✅ Self-ping successful at ${new Date().toISOString()}`, data.status);
+      } catch (error) {
+        console.error('❌ Self-ping failed:', error);
+      }
+    }, 13 * 60 * 1000); // 13 minutes
+  }
+}
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('Received SIGTERM, shutting down gracefully...');
+  if (pingInterval) {
+    clearInterval(pingInterval);
+  }
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.log('Received SIGINT, shutting down gracefully...');
+  if (pingInterval) {
+    clearInterval(pingInterval);
+  }
+  process.exit(0);
 });
 
 app.use((req: Request, res: Response, next: NextFunction): void => {
@@ -52,4 +102,5 @@ app.use(errorHandler);
 
 app.listen(PORT, (): void => {
   console.log(`Server started on ${PORT}.`);
+  startSelfPing(); // Start the self-ping service
 });

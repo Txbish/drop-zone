@@ -125,9 +125,11 @@ class Dashboard {
     });
 
     // Manage shares direct button
-    document.getElementById("manage-shares-direct-btn").addEventListener("click", () => {
-      this.openManageSharesModal();
-    });
+    document
+      .getElementById("manage-shares-direct-btn")
+      .addEventListener("click", () => {
+        this.openManageSharesModal();
+      });
 
     // View controls
     document.querySelectorAll(".view-btn").forEach((btn) => {
@@ -166,7 +168,9 @@ class Dashboard {
 
         const modal = document.getElementById("share-modal");
         const folderId = modal.dataset.folderId;
-        const duration = document.querySelector('input[name="duration"]:checked')?.value;
+        const duration = document.querySelector(
+          'input[name="duration"]:checked'
+        )?.value;
 
         if (!duration) {
           this.showMessage("error", "Please select a duration");
@@ -185,7 +189,10 @@ class Dashboard {
           this.showMessage("success", "Share link created successfully!");
         } catch (error) {
           // Check if this is a "folder already has share" error
-          if (error.message.includes('already has an active share') && error.shareData) {
+          if (
+            error.message.includes("already has an active share") &&
+            error.shareData
+          ) {
             this.showExistingShare(error.shareData);
           } else {
             this.showMessage("error", error.message);
@@ -1246,7 +1253,7 @@ class Dashboard {
             shareToken: result.shareToken,
             shareUrl: `${window.location.origin}/share/${result.shareToken}`,
             expiresAt: result.expiresAt,
-            createdAt: new Date().toISOString() // Fallback
+            createdAt: new Date().toISOString(), // Fallback
           };
           throw error;
         }
@@ -1352,7 +1359,9 @@ class Dashboard {
             <span><i class="fas fa-clock"></i> Expires: ${new Date(
               share.expiresAt
             ).toLocaleDateString()}</span>
-            <span><i class="fas fa-eye"></i> Accessed: ${share.accessCount} times</span>
+            <span><i class="fas fa-eye"></i> Accessed: ${
+              share.accessCount
+            } times</span>
           </div>
         </div>
         <div class="share-item-actions">
@@ -1505,31 +1514,31 @@ class Dashboard {
     // Hide create form and show existing share info
     createSection.style.display = "none";
     createdSection.style.display = "none";
-    
+
     // Create existing share section if it doesn't exist
     if (!existingSection) {
       this.createExistingShareSection();
     }
-    
+
     // Show and populate existing share section
     const section = document.getElementById("existing-share-section");
     section.style.display = "block";
-    
+
     const shareLinkInput = section.querySelector(".existing-share-link");
     const expiresSpan = section.querySelector(".existing-share-expires");
-    
+
     shareLinkInput.value = shareData.shareUrl;
     expiresSpan.textContent = new Date(shareData.expiresAt).toLocaleString();
   }
 
   createExistingShareSection() {
     const modalBody = document.querySelector(".share-modal-body");
-    
+
     const existingSection = document.createElement("div");
     existingSection.id = "existing-share-section";
     existingSection.className = "share-section";
     existingSection.style.display = "none";
-    
+
     existingSection.innerHTML = `
       <div class="share-warning-new">
         <div class="warning-icon-wrapper">
@@ -1593,7 +1602,7 @@ class Dashboard {
         </button>
       </div>
     `;
-    
+
     modalBody.appendChild(existingSection);
   }
 

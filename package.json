@@ -9,7 +9,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate": "prisma generate",
     "postinstall": "prisma generate",
-    "migrate-to-cloudinary": "ts-node scripts/migrateToCloudinary.ts"
+    "migrate-to-cloudinary": "ts-node scripts/migrateToCloudinary.ts",
+    "deploy": "./deploy.sh",
+    "heroku-postbuild": "npm run build"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
@@ -21,6 +23,7 @@
   "dependencies": {
     "@quixo3/prisma-session-store": "^3.1.13",
     "@types/multer": "^2.0.0",
+    "@types/node-fetch": "^2.6.12",
     "@types/uuid": "^10.0.0",
     "bcrypt": "^6.0.0",
     "cloudinary": "^1.41.3",
@@ -33,6 +36,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
     "multer-storage-cloudinary": "^4.0.0",
+    "node-fetch": "^2.7.0",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "uuid": "^11.1.0"

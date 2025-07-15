@@ -1,368 +1,827 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shared Folder - <%= folder.name %></title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
     <style>
-        .shared-folder-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            margin-bottom: 2rem;
-            text-align: center;
+      /* Shared Folder Specific Styles */
+      body {
+        background: linear-gradient(135deg, var(--bg-color) 0%, #0f1419 100%);
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+            circle at 20% 80%,
+            rgba(233, 69, 96, 0.1) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(15, 52, 96, 0.15) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 40%,
+            rgba(22, 33, 62, 0.1) 0%,
+            transparent 50%
+          );
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .shared-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* Hero Header */
+      .shared-hero {
+        background: linear-gradient(
+          135deg,
+          var(--primary-color) 0%,
+          var(--accent-color) 50%,
+          var(--highlight-color) 100%
+        );
+        border-radius: 20px;
+        padding: 3rem 2rem;
+        margin-bottom: 3rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+
+      .shared-hero::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 70%
+        );
+        animation: heroGlow 8s ease-in-out infinite;
+      }
+
+      @keyframes heroGlow {
+        0%,
+        100% {
+          transform: rotate(0deg) scale(1);
+          opacity: 0.3;
         }
-        
-        .shared-folder-header h1 {
-            margin: 0 0 0.5rem 0;
-            font-size: 2rem;
+        50% {
+          transform: rotate(180deg) scale(1.1);
+          opacity: 0.1;
         }
-        
-        .shared-info {
-            display: flex;
-            justify-content: center;
-            gap: 2rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+      }
+
+      .folder-icon-large {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3));
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
         }
-        
-        .shared-info-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            backdrop-filter: blur(10px);
+        50% {
+          transform: scale(1.05);
         }
-        
-        .shared-info-item strong {
-            display: block;
-            font-size: 0.85rem;
-            opacity: 0.8;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+      }
+
+      .shared-hero h1 {
+        font-size: 2.5rem;
+        margin: 0 0 1rem 0;
+        font-weight: 700;
+        color: var(--text-color);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .shared-by {
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+        font-weight: 300;
+      }
+
+      .shared-meta {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+
+      .meta-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        min-width: 140px;
+        transition: all 0.3s ease;
+      }
+
+      .meta-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .meta-card i {
+        display: block;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        color: var(--highlight-color);
+      }
+
+      .meta-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.8;
+        margin-bottom: 0.25rem;
+      }
+
+      .meta-value {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      /* Stats Section */
+      .stats-section {
+        background: var(--primary-color);
+        border: 1px solid var(--accent-color);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stats-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          var(--highlight-color),
+          #ff6b8a,
+          var(--highlight-color)
+        );
+      }
+
+      .stats-section h3 {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: var(--text-color);
+        font-size: 1.5rem;
+        position: relative;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .stat-card {
+        background: var(--bg-color);
+        border: 1px solid var(--accent-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .stat-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--highlight-color),
+          transparent
+        );
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        border-color: var(--highlight-color);
+      }
+
+      .stat-card:hover::before {
+        height: 4px;
+      }
+
+      .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: var(--highlight-color);
+      }
+
+      .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        font-size: 0.9rem;
+        color: var(--subtle-text);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      /* Section Titles */
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 3rem 0 2rem 0;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--accent-color);
+      }
+
+      .section-title h3 {
+        color: var(--text-color);
+        font-size: 1.5rem;
+        margin: 0;
+      }
+
+      .section-title i {
+        font-size: 1.5rem;
+        color: var(--highlight-color);
+      }
+
+      /* Folder Grid */
+      .folder-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+      }
+
+      .folder-card {
+        background: var(--primary-color);
+        border: 1px solid var(--accent-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .folder-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--highlight-color), #ff6b8a);
+        transition: width 0.3s ease;
+      }
+
+      .folder-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        border-color: var(--highlight-color);
+      }
+
+      .folder-card:hover::before {
+        width: 8px;
+      }
+
+      .folder-card-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
+      }
+
+      /* File Grid */
+      .files-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2rem;
+      }
+
+      .file-card {
+        background: var(--primary-color);
+        border: 1px solid var(--accent-color);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .file-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(
+          90deg,
+          var(--highlight-color),
+          #ff6b8a,
+          var(--highlight-color)
+        );
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+      }
+
+      .file-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+        border-color: var(--highlight-color);
+      }
+
+      .file-card:hover::before {
+        transform: scaleX(1);
+      }
+
+      .file-icon-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .file-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+        position: relative;
+      }
+
+      .file-icon.image {
+        background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+        color: #1976d2;
+        box-shadow: 0 0 20px rgba(25, 118, 210, 0.3);
+      }
+      .file-icon.document {
+        background: linear-gradient(45deg, #f3e5f5, #e1bee7);
+        color: #7b1fa2;
+        box-shadow: 0 0 20px rgba(123, 31, 162, 0.3);
+      }
+      .file-icon.video {
+        background: linear-gradient(45deg, #e8f5e8, #c8e6c9);
+        color: #388e3c;
+        box-shadow: 0 0 20px rgba(56, 142, 60, 0.3);
+      }
+      .file-icon.audio {
+        background: linear-gradient(45deg, #fff3e0, #ffe0b2);
+        color: #f57c00;
+        box-shadow: 0 0 20px rgba(245, 124, 0, 0.3);
+      }
+      .file-icon.archive {
+        background: linear-gradient(45deg, #fce4ec, #f8bbd9);
+        color: #c2185b;
+        box-shadow: 0 0 20px rgba(194, 24, 91, 0.3);
+      }
+
+      .file-info {
+        flex: 1;
+      }
+
+      .file-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-color);
+        margin-bottom: 0.5rem;
+        word-break: break-word;
+        line-height: 1.3;
+      }
+
+      .file-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+
+      .file-meta-item {
+        font-size: 0.85rem;
+        color: var(--subtle-text);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .file-meta-item i {
+        width: 16px;
+        text-align: center;
+        color: var(--highlight-color);
+      }
+
+      .download-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(45deg, var(--highlight-color), #ff6b8a);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        margin-top: 1.5rem;
+        box-shadow: 0 4px 20px rgba(233, 69, 96, 0.3);
+      }
+
+      .download-btn:hover {
+        background: linear-gradient(45deg, #d63851, var(--highlight-color));
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(233, 69, 96, 0.4);
+        color: white;
+      }
+
+      /* Empty State */
+      .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: var(--primary-color);
+        border: 2px dashed var(--accent-color);
+        border-radius: 20px;
+        margin: 3rem 0;
+      }
+
+      .empty-icon {
+        font-size: 5rem;
+        margin-bottom: 2rem;
+        opacity: 0.3;
+        background: linear-gradient(
+          45deg,
+          var(--subtle-text),
+          var(--text-color)
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .empty-state h3 {
+        color: var(--text-color);
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .empty-state p {
+        color: var(--subtle-text);
+        font-size: 1rem;
+        max-width: 400px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .shared-container {
+          padding: 1rem;
         }
-        
-        .files-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1rem;
-            margin-top: 2rem;
+
+        .shared-hero {
+          padding: 2rem 1rem;
         }
-        
-        .file-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 1.5rem;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
+
+        .shared-hero h1 {
+          font-size: 2rem;
         }
-        
-        .file-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+
+        .folder-icon-large {
+          font-size: 3rem;
         }
-        
-        .file-icon {
-            width: 48px;
-            height: 48px;
-            margin-bottom: 1rem;
-            background: #f0f0f0;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
+
+        .shared-meta {
+          flex-direction: column;
+          gap: 1rem;
         }
-        
-        .file-icon.image { background: #e3f2fd; color: #1976d2; }
-        .file-icon.document { background: #f3e5f5; color: #7b1fa2; }
-        .file-icon.video { background: #e8f5e8; color: #388e3c; }
-        .file-icon.audio { background: #fff3e0; color: #f57c00; }
-        .file-icon.archive { background: #fce4ec; color: #c2185b; }
-        
-        .file-name {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            word-break: break-word;
+
+        .meta-card {
+          min-width: auto;
         }
-        
-        .file-meta {
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 1rem;
-        }
-        
-        .download-btn {
-            width: 100%;
-            padding: 0.75rem;
-            background: #2196f3;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-        
-        .download-btn:hover {
-            background: #1976d2;
-            color: white;
-        }
-        
-        .no-files {
-            text-align: center;
-            padding: 3rem;
-            color: #666;
-        }
-        
-        .no-files-icon {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-            opacity: 0.3;
-        }
-        
-        .subfolder-section {
-            margin-top: 2rem;
-        }
-        
-        .subfolder-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .subfolder-card {
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 1rem;
-            background: white;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .subfolder-icon {
-            font-size: 2rem;
-            color: #ffa726;
-            margin-bottom: 0.5rem;
-        }
-        
-        .stats-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            text-align: center;
-        }
-        
+
         .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 1rem;
         }
-        
-        .stat-item {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+        .files-grid,
+        .folder-grid {
+          grid-template-columns: 1fr;
+          gap: 1rem;
         }
-        
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #2196f3;
+
+        .file-card {
+          padding: 1.5rem;
         }
-        
-        .stat-label {
-            font-size: 0.85rem;
-            color: #666;
-            margin-top: 0.5rem;
+
+        .file-icon-container {
+          flex-direction: column;
+          text-align: center;
+          gap: 1rem;
         }
-        
-        @media (max-width: 768px) {
-            .shared-info {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .files-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+
+        .section-title {
+          flex-direction: column;
+          text-align: center;
+          gap: 0.5rem;
         }
+      }
+
+      @media (max-width: 480px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
-</head>
-<body>
-    <div class="container">
-        <div class="shared-folder-header">
-            <h1>📁 <%= folder.name %></h1>
-            <p>Shared by <strong><%= folder.owner %></strong></p>
-            <div class="shared-info">
-                <div class="shared-info-item">
-                    <strong>Shared on</strong>
-                    <%= new Date(folder.sharedAt).toLocaleDateString() %>
-                </div>
-                <div class="shared-info-item">
-                    <strong>Expires on</strong>
-                    <%= new Date(folder.expiresAt).toLocaleDateString() %>
-                </div>
-                <div class="shared-info-item">
-                    <strong>Total Files</strong>
-                    <%= totalFiles %>
-                </div>
+  </head>
+  <body>
+    <div class="shared-container">
+      <!-- Hero Section -->
+      <div class="shared-hero">
+        <div class="hero-content">
+          <div class="folder-icon-large">
+            <i class="fas fa-folder-open"></i>
+          </div>
+          <h1><%= folder.name %></h1>
+          <p class="shared-by">
+            Shared by <strong><%= folder.owner %></strong>
+          </p>
+          <div class="shared-meta">
+            <div class="meta-card">
+              <i class="fas fa-calendar-plus"></i>
+              <div class="meta-label">Shared on</div>
+              <div class="meta-value">
+                <%= new Date(folder.sharedAt).toLocaleDateString() %>
+              </div>
             </div>
+            <div class="meta-card">
+              <i class="fas fa-clock"></i>
+              <div class="meta-label">Expires on</div>
+              <div class="meta-value">
+                <%= new Date(folder.expiresAt).toLocaleDateString() %>
+              </div>
+            </div>
+            <div class="meta-card">
+              <i class="fas fa-file-alt"></i>
+              <div class="meta-label">Total Files</div>
+              <div class="meta-value"><%= totalFiles %></div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <% if (files.length > 0 || subfolders.length > 0) { %>
-            <div class="stats-section">
-                <h3>Folder Contents</h3>
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value"><%= files.length %></div>
-                        <div class="stat-label">Direct Files</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value"><%= subfolders.length %></div>
-                        <div class="stat-label">Subfolders</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value"><%= totalFiles %></div>
-                        <div class="stat-label">Total Files</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value">
-                            <%= (allFiles.reduce((acc, file) => acc + (file.size || 0), 0) / (1024 * 1024)).toFixed(2) %> MB
-                        </div>
-                        <div class="stat-label">Total Size</div>
-                    </div>
-                </div>
+      <% if (files.length > 0 || subfolders.length > 0) { %>
+      <!-- Stats Section -->
+      <div class="stats-section">
+        <h3><i class="fas fa-chart-bar"></i> Folder Overview</h3>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-file"></i>
             </div>
-
-            <% if (subfolders.length > 0) { %>
-                <div class="subfolder-section">
-                    <h3>Subfolders</h3>
-                    <div class="subfolder-grid">
-                        <% subfolders.forEach(subfolder => { %>
-                            <div class="subfolder-card">
-                                <div class="subfolder-icon">📁</div>
-                                <div class="file-name"><%= subfolder.name %></div>
-                                <div class="file-meta">
-                                    Created: <%= new Date(subfolder.createdAt).toLocaleDateString() %>
-                                </div>
-                            </div>
-                        <% }); %>
-                    </div>
-                </div>
-            <% } %>
-
-            <% if (files.length > 0) { %>
-                <div class="files-section">
-                    <h3>Files in this folder</h3>
-                    <div class="files-grid">
-                        <% files.forEach(file => { 
-                            let fileIcon = '📄';
-                            let iconClass = 'document';
-                            
-                            if (file.mimeType) {
-                                if (file.mimeType.startsWith('image/')) {
-                                    fileIcon = '🖼️';
-                                    iconClass = 'image';
-                                } else if (file.mimeType.startsWith('video/')) {
-                                    fileIcon = '🎬';
-                                    iconClass = 'video';
-                                } else if (file.mimeType.startsWith('audio/')) {
-                                    fileIcon = '🎵';
-                                    iconClass = 'audio';
-                                } else if (file.mimeType.includes('zip') || file.mimeType.includes('archive')) {
-                                    fileIcon = '📦';
-                                    iconClass = 'archive';
-                                }
-                            }
-                        %>
-                            <div class="file-card">
-                                <div class="file-icon <%= iconClass %>">
-                                    <%= fileIcon %>
-                                </div>
-                                <div class="file-name"><%= file.originalName %></div>
-                                <div class="file-meta">
-                                    <div>Size: <%= (file.size / 1024).toFixed(2) %> KB</div>
-                                    <div>Type: <%= file.mimeType || 'Unknown' %></div>
-                                    <div>Uploaded: <%= new Date(file.createdAt).toLocaleDateString() %></div>
-                                </div>
-                                <a href="<%= file.secureUrl %>" 
-                                   class="download-btn" 
-                                   download="<%= file.originalName %>"
-                                   target="_blank">
-                                    📥 Download
-                                </a>
-                            </div>
-                        <% }); %>
-                    </div>
-                </div>
-            <% } %>
-
-            <% if (allFiles.length > files.length) { %>
-                <div class="files-section">
-                    <h3>All Files (including from subfolders)</h3>
-                    <div class="files-grid">
-                        <% allFiles.forEach(file => { 
-                            let fileIcon = '📄';
-                            let iconClass = 'document';
-                            
-                            if (file.mimeType) {
-                                if (file.mimeType.startsWith('image/')) {
-                                    fileIcon = '🖼️';
-                                    iconClass = 'image';
-                                } else if (file.mimeType.startsWith('video/')) {
-                                    fileIcon = '🎬';
-                                    iconClass = 'video';
-                                } else if (file.mimeType.startsWith('audio/')) {
-                                    fileIcon = '🎵';
-                                    iconClass = 'audio';
-                                } else if (file.mimeType.includes('zip') || file.mimeType.includes('archive')) {
-                                    fileIcon = '📦';
-                                    iconClass = 'archive';
-                                }
-                            }
-                        %>
-                            <div class="file-card">
-                                <div class="file-icon <%= iconClass %>">
-                                    <%= fileIcon %>
-                                </div>
-                                <div class="file-name"><%= file.originalName %></div>
-                                <div class="file-meta">
-                                    <div>Size: <%= (file.size / 1024).toFixed(2) %> KB</div>
-                                    <div>Type: <%= file.mimeType || 'Unknown' %></div>
-                                    <div>Uploaded: <%= new Date(file.createdAt).toLocaleDateString() %></div>
-                                </div>
-                                <a href="<%= file.secureUrl %>" 
-                                   class="download-btn" 
-                                   download="<%= file.originalName %>"
-                                   target="_blank">
-                                    📥 Download
-                                </a>
-                            </div>
-                        <% }); %>
-                    </div>
-                </div>
-            <% } %>
-        <% } else { %>
-            <div class="no-files">
-                <div class="no-files-icon">📂</div>
-                <h3>This folder is empty</h3>
-                <p>There are no files or subfolders in this shared folder.</p>
+            <div class="stat-value"><%= files.length %></div>
+            <div class="stat-label">Direct Files</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-folder"></i>
             </div>
-        <% } %>
+            <div class="stat-value"><%= subfolders.length %></div>
+            <div class="stat-label">Subfolders</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="stat-value"><%= totalFiles %></div>
+            <div class="stat-label">Total Files</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-hdd"></i>
+            </div>
+            <div class="stat-value">
+              <%= (allFiles.reduce((acc, file) => acc + (file.size || 0), 0) /
+              (1024 * 1024)).toFixed(2) %> MB
+            </div>
+            <div class="stat-label">Total Size</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subfolders Section -->
+      <% if (subfolders.length > 0) { %>
+      <div class="section-title">
+        <i class="fas fa-folder-tree"></i>
+        <h3>Subfolders</h3>
+      </div>
+      <div class="folder-grid">
+        <% subfolders.forEach(subfolder => { %>
+        <div class="folder-card">
+          <div class="folder-card-icon">
+            <i class="fas fa-folder"></i>
+          </div>
+          <div class="file-name"><%= subfolder.name %></div>
+          <div class="file-meta">
+            <div class="file-meta-item">
+              <i class="fas fa-calendar"></i>
+              Created: <%= new Date(subfolder.createdAt).toLocaleDateString() %>
+            </div>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+      <% } %>
+
+      <!-- Direct Files Section -->
+      <% if (files.length > 0) { %>
+      <div class="section-title">
+        <i class="fas fa-file-archive"></i>
+        <h3>Files in this folder</h3>
+      </div>
+      <div class="files-grid">
+        <% files.forEach(file => { let fileIcon = 'fas fa-file'; let iconClass =
+        'document'; if (file.mimeType) { if (file.mimeType.startsWith('image/'))
+        { fileIcon = 'fas fa-image'; iconClass = 'image'; } else if
+        (file.mimeType.startsWith('video/')) { fileIcon = 'fas fa-video';
+        iconClass = 'video'; } else if (file.mimeType.startsWith('audio/')) {
+        fileIcon = 'fas fa-music'; iconClass = 'audio'; } else if
+        (file.mimeType.includes('zip') || file.mimeType.includes('archive')) {
+        fileIcon = 'fas fa-file-archive'; iconClass = 'archive'; } else if
+        (file.mimeType.includes('pdf')) { fileIcon = 'fas fa-file-pdf'; } else
+        if (file.mimeType.includes('word')) { fileIcon = 'fas fa-file-word'; }
+        else if (file.mimeType.includes('excel') ||
+        file.mimeType.includes('sheet')) { fileIcon = 'fas fa-file-excel'; } }
+        %>
+        <div class="file-card">
+          <div class="file-icon-container">
+            <div class="file-icon <%= iconClass %>">
+              <i class="<%= fileIcon %>"></i>
+            </div>
+            <div class="file-info">
+              <div class="file-name"><%= file.originalName %></div>
+              <div class="file-meta">
+                <div class="file-meta-item">
+                  <i class="fas fa-weight-hanging"></i>
+                  <%= (file.size / 1024).toFixed(2) %> KB
+                </div>
+                <div class="file-meta-item">
+                  <i class="fas fa-file-code"></i>
+                  <%= file.mimeType || 'Unknown' %>
+                </div>
+                <div class="file-meta-item">
+                  <i class="fas fa-calendar-alt"></i>
+                  <%= new Date(file.createdAt).toLocaleDateString() %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <a
+            href="<%= file.secureUrl %>"
+            class="download-btn"
+            download="<%= file.originalName %>"
+            target="_blank"
+          >
+            <i class="fas fa-download"></i>
+            Download File
+          </a>
+        </div>
+        <% }); %>
+      </div>
+      <% } %>
+
+      <!-- All Files Section (if there are files in subfolders) -->
+      <% if (allFiles.length > files.length) { %>
+      <div class="section-title">
+        <i class="fas fa-globe"></i>
+        <h3>All Files (including from subfolders)</h3>
+      </div>
+      <div class="files-grid">
+        <% allFiles.forEach(file => { let fileIcon = 'fas fa-file'; let
+        iconClass = 'document'; if (file.mimeType) { if
+        (file.mimeType.startsWith('image/')) { fileIcon = 'fas fa-image';
+        iconClass = 'image'; } else if (file.mimeType.startsWith('video/')) {
+        fileIcon = 'fas fa-video'; iconClass = 'video'; } else if
+        (file.mimeType.startsWith('audio/')) { fileIcon = 'fas fa-music';
+        iconClass = 'audio'; } else if (file.mimeType.includes('zip') ||
+        file.mimeType.includes('archive')) { fileIcon = 'fas fa-file-archive';
+        iconClass = 'archive'; } else if (file.mimeType.includes('pdf')) {
+        fileIcon = 'fas fa-file-pdf'; } else if (file.mimeType.includes('word'))
+        { fileIcon = 'fas fa-file-word'; } else if
+        (file.mimeType.includes('excel') || file.mimeType.includes('sheet')) {
+        fileIcon = 'fas fa-file-excel'; } } %>
+        <div class="file-card">
+          <div class="file-icon-container">
+            <div class="file-icon <%= iconClass %>">
+              <i class="<%= fileIcon %>"></i>
+            </div>
+            <div class="file-info">
+              <div class="file-name"><%= file.originalName %></div>
+              <div class="file-meta">
+                <div class="file-meta-item">
+                  <i class="fas fa-weight-hanging"></i>
+                  <%= (file.size / 1024).toFixed(2) %> KB
+                </div>
+                <div class="file-meta-item">
+                  <i class="fas fa-file-code"></i>
+                  <%= file.mimeType || 'Unknown' %>
+                </div>
+                <div class="file-meta-item">
+                  <i class="fas fa-calendar-alt"></i>
+                  <%= new Date(file.createdAt).toLocaleDateString() %>
+                </div>
+              </div>
+            </div>
+          </div>
+          <a
+            href="<%= file.secureUrl %>"
+            class="download-btn"
+            download="<%= file.originalName %>"
+            target="_blank"
+          >
+            <i class="fas fa-download"></i>
+            Download File
+          </a>
+        </div>
+        <% }); %>
+      </div>
+      <% } %> <% } else { %>
+      <!-- Empty State -->
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fas fa-folder-open"></i>
+        </div>
+        <h3>This folder is empty</h3>
+        <p>
+          There are no files or subfolders in this shared folder. The owner may
+          add content later.
+        </p>
+      </div>
+      <% } %>
     </div>
-</body>
+  </body>
 </html>
