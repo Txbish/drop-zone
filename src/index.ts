@@ -1,3 +1,4 @@
+/// <reference types="./types" />
 import express, { Express, Request, Response, NextFunction, RequestHandler } from "express";
 import dotenv from "dotenv";
 import sessionConfig from "./config/sessionConfig";

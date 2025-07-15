@@ -1,7 +1,2 @@
-import { User as PrismaUser } from '../generated/prisma';
-
-declare global {
-  namespace Express {
-    export interface User extends Omit<PrismaUser, 'password'> {}
-  }
-}
+// Re-export global type declarations
+/// <reference path="./global.d.ts" />

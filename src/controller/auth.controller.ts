@@ -46,6 +46,13 @@ const renderLogin = (req: Request, res: Response) => {
 
 const handleSignup = async (req: Request, res: Response) => {
     try {
+        const errors: Result<ValidationError> = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const errorMessages = errors.array().map((err) => err.msg);
+    req.flash("error", errorMessages.join(", "));
+    return res.redirect("/signup");
+  }
         const { username, password } = req.body;
         const hashedPassword = await bcrypt.hash(password, 10);
         await prisma.user.create({

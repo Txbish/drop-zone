@@ -18,5 +18,4 @@ const verifyFunction: VerifyFunction = async (username: string, password: string
         return done(error);
     }
 };
-
 export default new LocalStrategy(verifyFunction);
