@@ -93,7 +93,7 @@ export const getDashboardData: RequestHandler = async (req, res, next) => {
     }
 
     // Get folder path for breadcrumb
-    const breadcrumb = [];
+    const breadcrumb: { id: string; name: string }[] = [];
     if (folderId && typeof folderId === 'string') {
       let currentFolder = await prisma.folder.findUnique({
         where: { id: folderId }
