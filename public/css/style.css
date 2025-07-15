@@ -507,12 +507,24 @@ body {
   flex: 1;
   display: flex;
   overflow: hidden;
+  position: relative;
 }
 
 .content-area {
   flex: 1;
   padding: 1.5rem;
   overflow-y: auto;
+  transition: filter var(--transition-speed);
+}
+
+/* When details panel is active, add subtle overlay to content */
+.content-body:has(.details-panel.active) .content-area {
+  filter: brightness(0.95);
+}
+
+/* Fallback for browsers that don't support :has() */
+.content-body.details-active .content-area {
+  filter: brightness(0.95);
 }
 
 /* Items Display */
@@ -632,12 +644,18 @@ body {
 
 /* Details Panel */
 .details-panel {
+  position: absolute;
+  right: 0;
+  top: 0;
   width: 300px;
+  height: 100%;
   background-color: var(--primary-color);
   border-left: 1px solid var(--accent-color);
   transform: translateX(100%);
   transition: transform var(--transition-speed);
   overflow-y: auto;
+  z-index: 10;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .details-panel.active {
